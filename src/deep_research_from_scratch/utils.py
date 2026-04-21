@@ -5,21 +5,39 @@ This module provides search and content processing utilities for the research ag
 including web search capabilities and content summarization tools.
 """
 
-from pathlib import Path
-from datetime import datetime
-from typing_extensions import Annotated, List, Literal
 import os
-from langchain.chat_models import init_chat_model 
-from langchain_core.messages import HumanMessage
-from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool, InjectedToolArg
-from tavily import TavilyClient
+from datetime import datetime
+from functools import wraps
+from pathlib import Path
 
-from deep_research_from_scratch.state_research import Summary
-from deep_research_from_scratch.prompts import summarize_webpage_prompt
-from deep_research_from_scratch.Helper import GenAIToken
+import requests
+import urllib3
 from dotenv import load_dotenv
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage
+from langchain_core.tools import InjectedToolArg, tool
+from tavily import TavilyClient
+from typing_extensions import Annotated, List, Literal
+
+from deep_research_from_scratch.Helper import GenAIToken
+from deep_research_from_scratch.prompts import summarize_webpage_prompt
+from deep_research_from_scratch.state_research import Summary
+
 load_dotenv()
+
+# ===== SSL CONFIGURATION =====
+# Set DISABLE_SSL_VERIFY=true in .env to skip certificate verification when
+# operating behind a corporate proxy with self-signed certificates.
+if os.getenv("DISABLE_SSL_VERIFY", "").lower() in ("1", "true", "yes"):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    _original_requests_post = requests.post
+
+    @wraps(_original_requests_post)
+    def _unverified_post(*args, **kwargs):
+        kwargs.setdefault("verify", False)
+        return _original_requests_post(*args, **kwargs)
+
+    requests.post = _unverified_post
 
 # ===== UTILITY FUNCTIONS =====
 
@@ -73,7 +91,6 @@ def tavily_search_multiple(
     Returns:
         List of search result dictionaries
     """
-
     # Execute searches sequentially. Note: yon can use AsyncTavilyClient to parallelize this step.
     search_docs = []
     for query in search_queries:
