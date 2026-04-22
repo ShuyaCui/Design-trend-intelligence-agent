@@ -7,7 +7,7 @@
 | Orchestration | [LangGraph](https://langchain-ai.github.io/langgraph/) | Stateful agent graph execution |
 | LLM abstraction | [LangChain](https://python.langchain.com/) | Model-agnostic LLM calls, tool binding |
 | LLM providers | OpenAI, Anthropic, Azure OpenAI | Reasoning, structured output |
-| Search | [Tavily](https://tavily.com/) | Web search with content extraction |
+| Search | [Tavily](https://tavily.com/) | Web search with content extraction and image collection |
 | Tool protocol | [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) | Standardized AI tool access |
 | Language | Python 3.11+ | Runtime |
 | Package management | [uv](https://docs.astral.sh/uv/) | Fast, reproducible Python environments |
@@ -19,7 +19,8 @@
 
 - **Notebooks are source of truth.** Files under `src/deep_research_from_scratch/` are generated via `%%writefile` cells in notebooks. Never edit `src/` directly.
 - **Async where it matters.** Parallel sub-agent execution uses `asyncio.gather()`. Sequential tool loops remain synchronous for simplicity.
-- **Structured output enforced at decision points.** Pydantic schemas prevent hallucinated routing (e.g., `ClarifyWithUser`, `ResearchQuestion`, `ConductResearch`).
+- **Structured output enforced at decision points.** Pydantic schemas prevent hallucinated routing (e.g., `ClarifyWithUser`, `ResearchQuestion`, `ConductResearch`, `ImageResult`).
+- **Image collection.** Tavily's `include_images` parameter captures image URLs alongside text results. Images are downloaded best-effort to `reports/<session_id>/images/` with metadata stored in `images_metadata.json`.
 
 ## Known Gaps (Roadmap Items)
 

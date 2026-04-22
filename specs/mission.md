@@ -25,6 +25,7 @@ Provide enterprise teams with a transparent, configurable deep research platform
 ## Scope
 
 - AI-driven research pipeline: scope → research → write
+- Multimodal research output: text findings and relevant images
 - Multi-agent coordination for parallel topic coverage
 - Configurable LLMs, search tools, and MCP servers
 - Structured output (research briefs, final reports)

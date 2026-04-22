@@ -2,7 +2,7 @@
 
 Phases follow the 5-notebook progression. Each phase is independently shippable.  
 Phases 6–7 address known gaps identified in the constitution.  
-**Current focus: Phase 6 (Agent Validation) → Phase 7 (Web UI).**
+**Current focus: Phase 6 (Agent Validation) → Phase 8 (Image Fetching) → Phase 7 (Web UI).**
 
 ---
 
@@ -73,12 +73,6 @@ Existing eval: `evaluate_next_step`.
 - [ ] Add `evaluate_research_depth` — LLM-as-judge for note quality
 - [ ] Add `evaluate_citation_presence` — heuristic for source URLs in notes
 
-### Notebook 3 — MCP Agent (gap — add evals)
-No existing evals.
-- [ ] Create `deep_research_mcp_tools` LangSmith dataset (3+ examples)
-- [ ] Add `evaluate_tool_selection` — correct MCP tool chosen per query type
-- [ ] Add `evaluate_mcp_parity` — output quality matches custom-tool agent
-
 ### Notebook 4 — Supervisor (strengthen)
 Existing eval: `evaluate_parallelism`.
 - [ ] Expand dataset to 5+ examples (single-topic, 3+ subtopics, overlapping)
@@ -101,7 +95,24 @@ No existing evals.
 
 ---
 
-## 📋 Phase 7 — Web UI  ← next
+## 📋 Phase 8 — Research Image Fetching  ← next
+**Source**: `notebooks/2_research_agent.ipynb`, `notebooks/4_research_supervisor.ipynb`, `notebooks/5_full_agent.ipynb`  **Status**: Not started
+**Spec**: `specs/2026-04-22-image-fetching/`
+
+- [ ] Add `ImageResult` Pydantic schema and `images` field to all state objects
+- [ ] Enable Tavily `include_images=True` and extract image metadata in `tavily_search` tool
+- [ ] Add `download_images()` utility (best-effort download with timeout, SSL-aware)
+- [ ] Update `tool_node` and `compress_research` to accumulate and preserve image references
+- [ ] Update supervisor to aggregate images from parallel sub-agents
+- [ ] Update prompts to instruct agents on image collection and relevance
+- [ ] Update `final_report_generation` to embed images via Markdown syntax
+- [ ] Write `images_metadata.json` alongside downloaded images in `reports/<session_id>/images/`
+
+**Done when**: A research query produces a final report that includes relevant images downloaded to local disk, with Markdown image references in the report body. Text-only research still works without regression.
+
+---
+
+## 📋 Phase 7 — Web UI
 **Addresses gap**: No browser interface for enterprise users.
 
 ### Tech stack
