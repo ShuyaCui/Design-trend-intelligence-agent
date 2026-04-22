@@ -5,6 +5,8 @@ This module provides search and content processing utilities for the research ag
 including web search capabilities and content summarization tools.
 """
 
+import contextvars
+import logging
 import os
 from datetime import datetime
 from functools import wraps
@@ -24,6 +26,7 @@ from deep_research_from_scratch.prompts import summarize_webpage_prompt
 from deep_research_from_scratch.state_research import Summary
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 # ===== SSL CONFIGURATION =====
 # Set DISABLE_SSL_VERIFY=true in .env to skip certificate verification when
@@ -61,16 +64,44 @@ def get_current_dir() -> Path:
 # ===== CONFIGURATION =====
 
 _DEFAULT_SUMMARIZATION_MODEL = "azure_openai:gpt-4.1"
+_runtime_config: contextvars.ContextVar[dict] = contextvars.ContextVar(
+    "runtime_config",
+    default={},
+)
+
+
+def set_runtime_config(configurable: dict | None) -> None:
+    """Store runtime model overrides for tool-side model resolution."""
+    _runtime_config.set(dict(configurable or {}))
+
+
+def get_runtime_config() -> dict:
+    """Return the current runtime model overrides for tool-side helpers."""
+    return dict(_runtime_config.get())
 
 
 def _build_summarization_model(
-    model_id: str = _DEFAULT_SUMMARIZATION_MODEL,
+    model_id: str | None = None,
     temperature: float = 0.0,
 ):
-    """Build the summarization model with a fresh GenAI token."""
-    deployment = model_id.split(":")[-1]
+    """Build the summarization model with a fresh GenAI token.
+
+    Fallback order is:
+    1. Explicit ``model_id`` argument
+    2. Runtime ``summarization_model`` override
+    3. Runtime ``research_model`` override
+    4. Default summarization model
+    """
+    runtime_config = get_runtime_config()
+    resolved_model_id = (
+        model_id
+        or runtime_config.get("summarization_model")
+        or runtime_config.get("research_model")
+        or _DEFAULT_SUMMARIZATION_MODEL
+    )
+    deployment = resolved_model_id.split(":")[-1]
     return init_chat_model(
-        model=model_id,
+        model=resolved_model_id,
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_deployment=deployment,
         api_key=GenAIToken().token(),
@@ -88,10 +119,10 @@ tavily_client = TavilyClient()
 # ===== SEARCH FUNCTIONS =====
 
 def tavily_search_multiple(
-    search_queries: List[str], 
-    max_results: int = 3, 
-    topic: Literal["general", "news", "finance"] = "general", 
-    include_raw_content: bool = True, 
+    search_queries: List[str],
+    max_results: int = 3,
+    topic: Literal["general", "news", "finance"] = "general",
+    include_raw_content: bool = True,
 ) -> List[dict]:
     """Perform search using Tavily API for multiple queries.
 
@@ -133,7 +164,7 @@ def summarize_webpage_content(webpage_content: str) -> str:
         # Generate summary
         summary = structured_model.invoke([
             HumanMessage(content=summarize_webpage_prompt.format(
-                webpage_content=webpage_content, 
+                webpage_content=webpage_content,
                 date=get_today_str()
             ))
         ])
@@ -147,7 +178,7 @@ def summarize_webpage_content(webpage_content: str) -> str:
         return formatted_summary
 
     except Exception as e:
-        print(f"Failed to summarize webpage: {str(e)}")
+        logger.warning("Failed to summarize webpage: %s", e)
         return webpage_content[:1000] + "..." if len(webpage_content) > 1000 else webpage_content
 
 def deduplicate_search_results(search_results: List[dict]) -> dict:

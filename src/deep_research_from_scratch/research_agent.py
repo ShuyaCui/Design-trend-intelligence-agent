@@ -29,7 +29,12 @@ from deep_research_from_scratch.state_research import (
     ResearcherOutputState,
     ResearcherState,
 )
-from deep_research_from_scratch.utils import get_today_str, tavily_search, think_tool
+from deep_research_from_scratch.utils import (
+    get_today_str,
+    set_runtime_config,
+    tavily_search,
+    think_tool,
+)
 
 load_dotenv()
 
@@ -37,7 +42,7 @@ load_dotenv()
 
 # Model role defaults
 _DEFAULT_RESEARCH_MODEL = "azure_openai:gpt-4.1"
-_DEFAULT_SUMMARIZATION_MODEL = "azure_openai:gpt-4.1-mini"  # reserved; not yet used by an active node
+_DEFAULT_SUMMARIZATION_MODEL = "azure_openai:gpt-4.1-mini"  # used by tool-side webpage summarization when configured
 _DEFAULT_COMPRESS_MODEL = "azure_openai:gpt-4.1"
 
 # Tools are module-level (no model dependency)
@@ -82,6 +87,7 @@ def llm_call(state: ResearcherState, config: RunnableConfig):
     Returns updated state with the model's response.
     """
     configurable = config.get("configurable", {})
+    set_runtime_config(configurable)
     model = _build_model(
         configurable.get("research_model", _DEFAULT_RESEARCH_MODEL),
         temperature=0.0,
@@ -131,6 +137,7 @@ def compress_research(state: ResearcherState, config: RunnableConfig) -> dict:
     (default: "azure_openai:gpt-4.1").
     """
     configurable = config.get("configurable", {})
+    set_runtime_config(configurable)
     compress_model = _build_model(
         configurable.get("compress_model", _DEFAULT_COMPRESS_MODEL),
         temperature=0.0,
