@@ -57,29 +57,47 @@ Phases 6–7 address known gaps identified in the constitution.
 
 ---
 
-## 🔄 Phase 6 — Agent Validation  ← current
-**Source**: `notebooks/6_evaluation.ipynb`  **Status**: In progress  
-**Addresses gap**: No automated quality measurement.
+## 🔄 Phase 6 — Agent Validation (per-module)  ← current
+**Status**: In progress  
+**Approach**: Evaluation lives at the end of each module notebook (not a standalone phase). Every notebook follows the LangSmith pattern: dataset → evaluator(s) → `langsmith_client.evaluate()`.
 
-### Evaluation schema
-- [ ] Define `EvaluationResult` Pydantic schema: `source_coverage`, `factual_consistency`, `answer_completeness`, `citation_quality` (0–10 float scores + rationale strings)
-- [ ] Add rubric prompt template to `prompts.py` (LLM-as-judge, JSON output)
+### Notebook 1 — Scoping (strengthen)
+Existing evals: `evaluate_success_criteria`, `evaluate_no_assumptions`.
+- [ ] Expand dataset to 5+ examples (ambiguous queries, multi-topic, no-clarification-needed)
+- [ ] Add `evaluate_clarification_routing` — verify clarification vs. proceed decision
+- [ ] Add `evaluate_brief_completeness` — all `ResearchQuestion` fields populated
 
-### LangSmith evaluator
-- [ ] Create `notebooks/6_evaluation.ipynb`; expose code to `src/` via `%%writefile`
-- [ ] Implement `run_evaluator(run_id, rubric)` calling LangSmith SDK
-- [ ] Add `LANGSMITH_API_KEY` / `LANGSMITH_TRACING` to `.env.example`
+### Notebook 2 — Research Agent (strengthen)
+Existing eval: `evaluate_next_step`.
+- [ ] Expand dataset to 5+ examples (multi-step, single-step, topic drift, empty results)
+- [ ] Add `evaluate_research_depth` — LLM-as-judge for note quality
+- [ ] Add `evaluate_citation_presence` — heuristic for source URLs in notes
 
-### Benchmark dataset
-- [ ] Create `evals/benchmark.json` — 10–20 gold-standard questions with expected source domains, key facts, minimum section coverage
-- [ ] Write `evals/run_benchmark.py` to batch-invoke the full agent and emit `EvaluationResult` per question
+### Notebook 3 — MCP Agent (gap — add evals)
+No existing evals.
+- [ ] Create `deep_research_mcp_tools` LangSmith dataset (3+ examples)
+- [ ] Add `evaluate_tool_selection` — correct MCP tool chosen per query type
+- [ ] Add `evaluate_mcp_parity` — output quality matches custom-tool agent
 
-### Regression guard
-- [ ] Add `evals/` test path to `pyproject.toml`; mark slow tests with `@pytest.mark.slow`
-- [ ] Make `uv run pytest evals/` runnable (skippable in CI without API keys via `SKIP_EVALS=1`)
-- [ ] Document evaluation workflow in `specs/evaluation.md`
+### Notebook 4 — Supervisor (strengthen)
+Existing eval: `evaluate_parallelism`.
+- [ ] Expand dataset to 5+ examples (single-topic, 3+ subtopics, overlapping)
+- [ ] Add `evaluate_topic_coverage` — LLM-as-judge for decomposition quality
+- [ ] Add `evaluate_aggregation_quality` — merged notes coherent and non-redundant
 
-**Done when**: Any prompt or agent logic change can be scored against the benchmark set and regressions are detectable.
+### Notebook 5 — Full System (gap — add end-to-end eval)
+No existing evals.
+- [ ] Create `deep_research_e2e` LangSmith dataset (3–5 full queries)
+- [ ] Add `evaluate_report_source_coverage` — LLM-as-judge for source diversity
+- [ ] Add `evaluate_report_factual_consistency` — claims match cited sources
+- [ ] Add `evaluate_report_completeness` — all aspects of question addressed
+- [ ] Add `evaluate_report_structure` — heuristic for expected sections
+
+### Shared
+- [ ] Add eval prompt templates to `prompts.py` via `%%writefile`
+- [ ] Document `LANGSMITH_API_KEY` setup in `.env.example`
+
+**Done when**: Every module notebook (1–5) has a working evaluation section; running all evals produces LangSmith experiment results that detect regressions when prompts or agent logic change.
 
 ---
 

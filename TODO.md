@@ -1,33 +1,54 @@
 # TODO
 
-Current sprint items for **Phase 6 — Agent Validation** and **Phase 7 — Web UI**.
-Phases 1–5 (scoping, research, MCP, supervisor, full system) are complete.
+Current sprint items for **Agent Validation** (per-module) and **Web UI**.
+Phases 1–5 (scoping, research, MCP, supervisor, full system) are implemented.
+Evaluation is performed **at the end of each module notebook**, not as a standalone phase.
 
 ---
 
-## Phase 6 — Agent Validation  ← current focus
+## Agent Validation  ← current focus
 
-### 6.1  Evaluation rubric & schema
-- [ ] Define `EvaluationResult` Pydantic schema: scores for source coverage, factual consistency, answer completeness, citation quality
-- [ ] Write rubric prompt in `prompts.py` (LLM-as-judge template, JSON output)
+Evaluation lives at the bottom of each module notebook. Every notebook follows the same pattern: create a LangSmith dataset → define evaluator(s) → run `langsmith_client.evaluate()`.
 
-### 6.2  LangSmith evaluator
-- [ ] Create `notebooks/6_evaluation.ipynb`; expose generated code to `src/` via `%%writefile`
-- [ ] Implement `run_evaluator(run_id, rubric)` using LangSmith SDK
-- [ ] Add `LANGSMITH_API_KEY` / `LANGSMITH_TRACING` to `.env.example`
+### Notebook 1 — Scoping (`1_scoping.ipynb`) — strengthen existing evals
+**Existing evaluators**: `evaluate_success_criteria` (LLM-as-judge), `evaluate_no_assumptions` (LLM-as-judge).
+- [ ] Expand dataset from 2 → 5+ examples (add edge cases: ambiguous queries, multi-topic queries, queries that need no clarification)
+- [ ] Add evaluator: `evaluate_clarification_routing` — verify the agent correctly decides to ask clarification vs. proceed (test `ClarifyWithUser.need_clarification` routing)
+- [ ] Add evaluator: `evaluate_brief_completeness` — check that all fields of `ResearchQuestion` are populated (non-empty title, background, key_questions, etc.)
 
-### 6.3  Benchmark dataset
-- [ ] Create `evals/benchmark.json` — 10–20 gold-standard research questions with expected source domains, key facts, and minimum section coverage
-- [ ] Write `evals/run_benchmark.py` to batch-invoke the full agent and collect `EvaluationResult` per question
+### Notebook 2 — Research Agent (`2_research_agent.ipynb`) — strengthen existing evals
+**Existing evaluator**: `evaluate_next_step` (heuristic — continue vs. stop).
+- [ ] Expand dataset from 2 → 5+ examples (add: multi-step search needed, single search sufficient, topic drift scenario, empty search results)
+- [ ] Add evaluator: `evaluate_research_depth` — LLM-as-judge that scores whether the agent's final compressed notes have sufficient depth / breadth for the given question
+- [ ] Add evaluator: `evaluate_citation_presence` — heuristic check that URLs/sources appear in compressed research notes
 
-### 6.4  Regression guard
-- [ ] Add `evals/` to `pyproject.toml` test paths
-- [ ] Make `uv run pytest evals/` runnable in CI (mark slow tests `@pytest.mark.slow`)
-- [ ] Document evaluation workflow in `specs/evaluation.md`
+### Notebook 3 — MCP Agent (`3_research_agent_mcp.ipynb`) — add evals (gap)
+**Existing evaluators**: None.
+- [ ] Create LangSmith dataset `deep_research_mcp_tools` with 3+ examples testing MCP tool selection and results
+- [ ] Add evaluator: `evaluate_tool_selection` — verify the agent selects the correct MCP tool for a given query type (filesystem vs. search)
+- [ ] Add evaluator: `evaluate_mcp_parity` — compare MCP agent output quality against custom-tool agent output on same input (functional parity check)
+
+### Notebook 4 — Supervisor (`4_research_supervisor.ipynb`) — strengthen existing evals
+**Existing evaluator**: `evaluate_parallelism` (heuristic — correct number of threads).
+- [ ] Expand dataset from 2 → 5+ examples (add: single-topic, 3+ subtopics, partially overlapping topics, negation "don't compare")
+- [ ] Add evaluator: `evaluate_topic_coverage` — LLM-as-judge that checks whether the decomposed subtopics cover the original question without gaps
+- [ ] Add evaluator: `evaluate_aggregation_quality` — verify merged notes from all workers are coherent and non-redundant
+
+### Notebook 5 — Full System (`5_full_agent.ipynb`) — add end-to-end eval (gap)
+**Existing evaluators**: None.
+- [ ] Create LangSmith dataset `deep_research_e2e` with 3–5 full research queries + expected report characteristics (source domains, key facts, required sections)
+- [ ] Add evaluator: `evaluate_report_source_coverage` — LLM-as-judge scoring how well the report cites diverse, relevant sources
+- [ ] Add evaluator: `evaluate_report_factual_consistency` — LLM-as-judge checking claims against cited sources
+- [ ] Add evaluator: `evaluate_report_completeness` — LLM-as-judge verifying all aspects of the research question are addressed in the report
+- [ ] Add evaluator: `evaluate_report_structure` — heuristic check for expected sections (introduction, findings, conclusion, references)
+
+### Shared infrastructure
+- [ ] Add eval prompt templates to `prompts.py` via `%%writefile` (criteria judge, depth judge, report quality judge)
+- [ ] Ensure `LANGSMITH_API_KEY` is in `.env.example` with instructions
 
 ---
 
-## Phase 7 — Web UI  ← next focus
+## Web UI  ← next focus
 
 ### 7.1  Backend API  (FastAPI + LangGraph streaming)
 - [ ] Create `web/backend/` package with FastAPI app
