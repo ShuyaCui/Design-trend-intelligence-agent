@@ -570,3 +570,364 @@ Judgment: FAIL - assumes "modern", "safe", and "good schools" preferences
 <output_instructions>
 Carefully scan the brief for any details not explicitly provided by the user. Be strict - when in doubt about whether something was user-specified, lean toward FAIL.
 </output_instructions>"""
+
+# ---------------------------------------------------------------------------
+# Evaluation prompt templates — shared across notebook eval sections
+# ---------------------------------------------------------------------------
+#
+# Each prompt follows a common rubric contract:
+#   - Role definition with expertise context
+#   - Single measurable criterion per prompt
+#   - Evidence-before-score instruction
+#   - Balanced 1–5 rubric with anchor descriptions
+#   - Edge-case guidance (partial answers, sparse citations, overlap)
+#   - Structured JSON output: score (1–5), reasoning, evidence, confidence
+#   - Bias mitigation notes (length, verbosity, authority)
+#
+# Downstream evaluators normalize the 1–5 score to 0.0–1.0 via:
+#   normalized = (raw_score - 1) / 4
+# ---------------------------------------------------------------------------
+
+RESEARCH_DEPTH_JUDGE_PROMPT = """
+<role>
+You are an expert research quality evaluator. You assess whether compressed
+research notes demonstrate sufficient depth, breadth, and usefulness for
+answering a given research question.
+</role>
+
+<task>
+Evaluate the depth and quality of the compressed research notes produced by a
+research agent for the given research question.  Return a single JSON object
+with your assessment.
+</task>
+
+<research_question>
+{research_question}
+</research_question>
+
+<compressed_notes>
+{compressed_notes}
+</compressed_notes>
+
+<rubric>
+Score on a 1–5 scale:
+
+5 — Excellent: Notes cover multiple relevant facets in depth, include specific
+    facts/data/quotes, cite diverse sources, and would support a comprehensive
+    report without further research.
+4 — Good: Notes cover the core facets with reasonable detail and source
+    variety, but one minor dimension is thin or one source cluster dominates.
+3 — Adequate: Notes address the main question with some supporting detail,
+    but lack depth on important sub-topics or rely on very few sources.
+2 — Weak: Notes touch on the topic superficially, are missing major
+    dimensions, or largely repeat the same information from different sources.
+1 — Poor: Notes are off-topic, nearly empty, or provide no usable information
+    for report writing.
+</rubric>
+
+<bias_controls>
+- Do NOT reward longer notes merely for being longer. A concise set of notes
+  with specific facts scores higher than a verbose set that repeats generalities.
+- Do NOT penalize notes that are brief if they contain high-signal information.
+- Evaluate usefulness for answering the specific research question, not
+  generic informativeness.
+</bias_controls>
+
+<edge_cases>
+- If the research question is narrow and the notes fully answer it in a few
+  paragraphs, that can still score 5.
+- If notes contain partial information on some facets, score 3 rather than 1.
+- If notes are entirely off-topic relative to the question, score 1 even if
+  they are well-written.
+</edge_cases>
+
+<output_format>
+Return ONLY a valid JSON object with these exact keys:
+
+{{
+  "evidence": "<specific quotes or observations from the notes that support your score>",
+  "reasoning": "<explain why the notes deserve the score, referencing the rubric level>",
+  "score": <integer 1-5>,
+  "confidence": "<high | medium | low>",
+  "improvement_note": "<one concrete suggestion for how the research could be deeper>"
+}}
+
+IMPORTANT: Populate "evidence" BEFORE deciding on "score". Ground your
+judgment in concrete observations, not impressions.
+</output_format>
+"""
+
+TOPIC_COVERAGE_JUDGE_PROMPT = """
+<role>
+You are an expert research decomposition evaluator. You assess whether a
+supervisor agent's topic decomposition adequately covers the original
+research question without obvious blind spots.
+</role>
+
+<task>
+Evaluate whether the set of decomposed subtopics collectively covers the
+original research question. Return a single JSON object with your assessment.
+</task>
+
+<original_question>
+{original_question}
+</original_question>
+
+<decomposed_subtopics>
+{decomposed_subtopics}
+</decomposed_subtopics>
+
+<rubric>
+Score on a 1–5 scale:
+
+5 — Complete: Every material aspect of the question is addressed by at least
+    one subtopic. No significant gaps. Subtopics are non-redundant and
+    collectively exhaust the question's scope.
+4 — Near-complete: Most aspects are covered. One minor dimension is missing
+    but the overall research would still be useful.
+3 — Partial: The core of the question is addressed, but one or more important
+    dimensions are absent. The resulting research would have noticeable gaps.
+2 — Weak: Only a narrow slice of the question is covered. Major aspects are
+    missing or the decomposition is poorly aligned with the question.
+1 — Poor: The subtopics are largely irrelevant to the question or cover only
+    a trivial fraction of its scope.
+</rubric>
+
+<bias_controls>
+- Do NOT reward more subtopics merely for being numerous. Fewer, well-scoped
+  subtopics that collectively cover the question score higher than many
+  overlapping or tangential ones.
+- If the original question is simple and one subtopic suffices, that is valid.
+</bias_controls>
+
+<edge_cases>
+- If subtopics partially overlap, evaluate whether the overlap is harmful
+  (redundant work) or beneficial (necessary shared context). Minor overlap
+  should not reduce the score below 4.
+- If the question contains a negation (e.g., "don't compare X"), verify
+  subtopics respect that constraint.
+- If the question is a broad survey, expect wider decomposition.
+</edge_cases>
+
+<output_format>
+Return ONLY a valid JSON object with these exact keys:
+
+{{
+  "evidence": "<list the aspects of the question and note which subtopics cover each>",
+  "reasoning": "<explain coverage gaps or confirm completeness, referencing the rubric>",
+  "score": <integer 1-5>,
+  "confidence": "<high | medium | low>"
+}}
+
+IMPORTANT: Populate "evidence" BEFORE deciding on "score".
+</output_format>
+"""
+
+REPORT_SOURCE_COVERAGE_PROMPT = """
+<role>
+You are an expert research report evaluator specializing in source quality
+and citation analysis.
+</role>
+
+<task>
+Evaluate whether the final research report cites diverse, relevant sources
+and whether claims in the report are grounded in cited material. Return a
+single JSON object with your assessment.
+</task>
+
+<research_question>
+{research_question}
+</research_question>
+
+<report>
+{report}
+</report>
+
+<expected_sources>
+{expected_sources}
+</expected_sources>
+
+<rubric>
+Score on a 1–5 scale:
+
+5 — Excellent: Report cites a diverse set of relevant sources across multiple
+    domains or perspectives. All major claims are grounded in at least one
+    citation. Expected source domains are well-represented.
+4 — Good: Most claims are cited. Source diversity is reasonable but one
+    expected domain is under-represented.
+3 — Adequate: Some claims are cited, but several important assertions lack
+    source support. Source diversity is limited.
+2 — Weak: Few citations present. Many claims are unsupported. Sources are
+    narrow or largely irrelevant.
+1 — Poor: No meaningful citations. Report reads as unsourced opinion.
+</rubric>
+
+<bias_controls>
+- Do NOT reward a high number of citations if they all come from the same
+  source or domain. Diversity matters more than count.
+- Prefer cited factual support over confident-sounding unsupported prose.
+</bias_controls>
+
+<edge_cases>
+- If the report addresses a niche topic where few authoritative sources
+  exist, adjust expectations but still require whatever is available.
+- If expected_sources is empty, evaluate source quality and diversity on
+  general merit.
+</edge_cases>
+
+<output_format>
+Return ONLY a valid JSON object with these exact keys:
+
+{{
+  "evidence": "<list key claims and whether each is cited, note source domains found>",
+  "reasoning": "<explain source coverage quality, referencing the rubric>",
+  "score": <integer 1-5>,
+  "confidence": "<high | medium | low>"
+}}
+
+IMPORTANT: Populate "evidence" BEFORE deciding on "score".
+</output_format>
+"""
+
+REPORT_FACTUAL_CONSISTENCY_PROMPT = """
+<role>
+You are an expert fact-checking evaluator for research reports. You assess
+whether the claims made in a report are consistent with and supported by the
+cited sources.
+</role>
+
+<task>
+Evaluate the factual consistency of the report by checking whether key claims
+are supported by the sources cited alongside them. Return a single JSON object
+with your assessment.
+</task>
+
+<research_question>
+{research_question}
+</research_question>
+
+<report>
+{report}
+</report>
+
+<expected_facts>
+{expected_facts}
+</expected_facts>
+
+<rubric>
+Score on a 1–5 scale:
+
+5 — Highly consistent: All key claims are supported by cited sources. No
+    contradictions or unsupported factual assertions detected.
+4 — Mostly consistent: Nearly all claims are supported. One minor claim
+    lacks full citation support but is plausible.
+3 — Mixed: Some claims are well-supported, but at least one important
+    assertion is unsupported or contradicts available evidence.
+2 — Weak: Multiple important claims lack source support. Some statements
+    appear speculative or contradict cited material.
+1 — Poor: Most claims are unsupported. Report contains clear
+    misinformation or fabricated details.
+</rubric>
+
+<bias_controls>
+- Do NOT assume a confident tone implies factual accuracy. Evaluate based
+  on cited evidence, not rhetorical strength.
+- Do NOT penalize hedged or qualified claims — they often reflect appropriate
+  epistemic caution.
+- Partial citation support (claim is partially backed by a source) should
+  score between 3 and 4, not 1.
+</bias_controls>
+
+<edge_cases>
+- If a claim is common knowledge (e.g., widely accepted facts), it may not
+  require a specific citation. Do not penalize for this.
+- If expected_facts is empty, evaluate factual consistency on general merit
+  by checking internal consistency and citation alignment.
+- If sources are inaccessible, assess based on whether the citation metadata
+  (title, URL) plausibly supports the claim.
+</edge_cases>
+
+<output_format>
+Return ONLY a valid JSON object with these exact keys:
+
+{{
+  "evidence": "<list key claims from the report and whether each is supported by a cited source>",
+  "reasoning": "<explain factual consistency assessment, referencing the rubric>",
+  "score": <integer 1-5>,
+  "confidence": "<high | medium | low>"
+}}
+
+IMPORTANT: Populate "evidence" BEFORE deciding on "score".
+</output_format>
+"""
+
+REPORT_COMPLETENESS_PROMPT = """
+<role>
+You are an expert research report evaluator focused on content completeness.
+You assess whether a report addresses all material aspects of the research
+question.
+</role>
+
+<task>
+Evaluate whether the report comprehensively addresses all important aspects
+of the original research question. Return a single JSON object with your
+assessment.
+</task>
+
+<research_question>
+{research_question}
+</research_question>
+
+<report>
+{report}
+</report>
+
+<expected_sections>
+{expected_sections}
+</expected_sections>
+
+<rubric>
+Score on a 1–5 scale:
+
+5 — Comprehensive: Every material aspect of the research question is
+    addressed in depth. Expected sections are all present and substantive.
+    The report would fully satisfy the requester.
+4 — Mostly complete: Most aspects are addressed well. One minor dimension
+    is thin but the report is still highly useful.
+3 — Partial: The core question is answered, but one or more important
+    aspects are missing or only superficially treated.
+2 — Incomplete: Major aspects of the question are unaddressed. The report
+    covers only a subset of what was asked.
+1 — Severely incomplete: The report barely touches the question or addresses
+    an entirely different topic.
+</rubric>
+
+<bias_controls>
+- Penalize omission more than brevity. A short section that addresses a
+  topic is better than a long report that skips it entirely.
+- Do NOT reward length for its own sake. A concise but complete report
+  scores higher than a verbose but gap-filled one.
+</bias_controls>
+
+<edge_cases>
+- If expected_sections is empty, evaluate completeness against the natural
+  scope implied by the research question.
+- If the research question is narrow, a shorter report can still score 5
+  if it fully addresses the question.
+- If the question has multiple sub-questions, each must be addressed for
+  high scores.
+</edge_cases>
+
+<output_format>
+Return ONLY a valid JSON object with these exact keys:
+
+{{
+  "evidence": "<list aspects of the research question and which parts of the report address each>",
+  "reasoning": "<explain completeness assessment, referencing the rubric>",
+  "score": <integer 1-5>,
+  "confidence": "<high | medium | low>"
+}}
+
+IMPORTANT: Populate "evidence" BEFORE deciding on "score".
+</output_format>
+"""

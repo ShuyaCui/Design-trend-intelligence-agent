@@ -2,8 +2,140 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 import json
+import os
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 console = Console()
+
+
+# ---------------------------------------------------------------------------
+# Shared evaluation helpers — used across notebook eval sections
+# ---------------------------------------------------------------------------
+
+class JudgeResult(BaseModel):
+    """Structured output schema for LLM-as-judge evaluators.
+
+    Fields are ordered so the judge must produce evidence before scoring,
+    which improves scoring reliability.
+    """
+
+    evidence: str = Field(
+        description=(
+            "Specific quotes, observations, or data points from the artifact "
+            "that support the assessment. Must be populated BEFORE the score."
+        ),
+    )
+    reasoning: str = Field(
+        description=(
+            "Explanation of why the artifact deserves the score, referencing "
+            "the rubric level and the evidence provided."
+        ),
+    )
+    score: int = Field(
+        ge=1,
+        le=5,
+        description="Integer score on the balanced 1–5 rubric.",
+    )
+    confidence: Literal["high", "medium", "low"] = Field(
+        description="Self-assessed confidence in the judgment.",
+    )
+
+
+class JudgeResultWithImprovement(JudgeResult):
+    """Extended judge result that includes an improvement suggestion."""
+
+    improvement_note: str = Field(
+        description="One concrete suggestion for how the artifact could be improved.",
+    )
+
+
+def normalize_score(raw: int) -> float:
+    """Normalize a 1–5 rubric score to 0.0–1.0.
+
+    Mapping: 1→0.0, 2→0.25, 3→0.5, 4→0.75, 5→1.0.
+    """
+    return (raw - 1) / 4
+
+
+def to_langsmith_result(
+    key: str,
+    judge_result: JudgeResult,
+    *,
+    prompt_name: str | None = None,
+    judge_model: str | None = None,
+    evaluator_type: str = "direct_scoring",
+    rubric_strictness: str = "balanced",
+) -> dict:
+    """Convert a JudgeResult into a LangSmith-compatible evaluator result dict.
+
+    Args:
+        key: Evaluator key name (e.g. ``"research_depth_score"``).
+        judge_result: Parsed judge output.
+        prompt_name: Name of the prompt template used.
+        judge_model: Model identifier used for judging.
+        evaluator_type: One of ``"heuristic"``, ``"direct_scoring"``, ``"pairwise"``.
+        rubric_strictness: Rubric strictness level (default ``"balanced"``).
+
+    Returns:
+        Dict ready to be returned from a LangSmith evaluator function.
+    """
+    result: dict = {
+        "key": key,
+        "score": normalize_score(judge_result.score),
+        "reasoning": judge_result.reasoning,
+        "evidence": judge_result.evidence,
+        "confidence": judge_result.confidence,
+    }
+
+    if hasattr(judge_result, "improvement_note"):
+        result["improvement_note"] = judge_result.improvement_note
+
+    result["metadata"] = {
+        "evaluator_type": evaluator_type,
+        "rubric_strictness": rubric_strictness,
+        "raw_score": judge_result.score,
+    }
+    if prompt_name:
+        result["metadata"]["prompt_name"] = prompt_name
+    if judge_model:
+        result["metadata"]["judge_model"] = judge_model
+
+    return result
+
+
+def init_judge_model(
+    model: str = "azure_openai:GPT-54-2026-03-05",
+    temperature: float = 0.0,
+):
+    """Initialize the LLM used for judge evaluations.
+
+    Encapsulates Azure OpenAI auth via GenAIToken so each notebook eval
+    section does not need to repeat boilerplate.
+
+    Args:
+        model: Model identifier (default is the spec-designated judge model).
+        temperature: Sampling temperature (default 0.0 for deterministic judging).
+
+    Returns:
+        A chat model instance ready for ``.invoke()`` or ``.with_structured_output()``.
+    """
+    from langchain.chat_models import init_chat_model as _init_chat_model
+    from deep_research_from_scratch.Helper import GenAIToken
+
+    return _init_chat_model(
+        model=model,
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
+        api_key=GenAIToken().token(),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+        default_headers={
+            "project-name": os.getenv("HEADERS_PROJECT_NAME"),
+            "userid": os.getenv("HEADERS_USERID"),
+        },
+        temperature=temperature,
+    )
 
 def format_message_content(message):
     """Convert message content to displayable string"""
