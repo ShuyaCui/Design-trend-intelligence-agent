@@ -139,7 +139,7 @@ def init_judge_model(
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         default_headers={
             "project-name": os.getenv("HEADERS_PROJECT_NAME"),
-            "user-id": os.getenv("HEADERS_USERID"),
+            "userid": os.getenv("HEADERS_USERID"),
         },
         temperature=temperature,
     )
