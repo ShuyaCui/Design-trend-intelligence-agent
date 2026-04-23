@@ -59,7 +59,7 @@ def normalize_score(raw: int) -> float:
     return (raw - 1) / 4
 
 
-def to_langsmith_result(
+def to_langfuse_evaluation(
     key: str,
     judge_result: JudgeResult,
     *,
@@ -68,10 +68,14 @@ def to_langsmith_result(
     evaluator_type: str = "direct_scoring",
     rubric_strictness: str = "balanced",
 ) -> dict:
-    """Convert a JudgeResult into a LangSmith-compatible evaluator result dict.
+    """Convert a JudgeResult into a Langfuse Evaluation-compatible dict.
+
+    Returns a dict with ``name``, ``value``, ``comment``, and ``metadata``
+    fields matching the ``langfuse.experiment.Evaluation`` protocol used
+    by ``Langfuse.run_experiment()`` evaluators.
 
     Args:
-        key: Evaluator key name (e.g. ``"research_depth_score"``).
+        key: Evaluator metric name (e.g. ``"research_depth_score"``).
         judge_result: Parsed judge output.
         prompt_name: Name of the prompt template used.
         judge_model: Model identifier used for judging.
@@ -79,33 +83,39 @@ def to_langsmith_result(
         rubric_strictness: Rubric strictness level (default ``"balanced"``).
 
     Returns:
-        Dict ready to be returned from a LangSmith evaluator function.
+        Dict compatible with Langfuse ``Evaluation`` (``name``, ``value``,
+        ``comment``, ``metadata``).
     """
-    result: dict = {
-        "key": key,
-        "score": normalize_score(judge_result.score),
-        "comment": (
-            f"Evidence: {judge_result.evidence}\n\n"
-            f"Reasoning: {judge_result.reasoning}\n\n"
-            f"Confidence: {judge_result.confidence}"
-        ),
-    }
+    comment = (
+        f"Evidence: {judge_result.evidence}\n\n"
+        f"Reasoning: {judge_result.reasoning}\n\n"
+        f"Confidence: {judge_result.confidence}"
+    )
 
     if hasattr(judge_result, "improvement_note"):
-        result["comment"] += f"\n\nImprovement: {judge_result.improvement_note}"
+        comment += f"\n\nImprovement: {judge_result.improvement_note}"
 
-    result["evaluator_info"] = {
+    metadata: dict = {
         "evaluator_type": evaluator_type,
         "rubric_strictness": rubric_strictness,
         "raw_score": judge_result.score,
         "confidence": judge_result.confidence,
     }
     if prompt_name:
-        result["evaluator_info"]["prompt_name"] = prompt_name
+        metadata["prompt_name"] = prompt_name
     if judge_model:
-        result["evaluator_info"]["judge_model"] = judge_model
+        metadata["judge_model"] = judge_model
 
-    return result
+    return {
+        "name": key,
+        "value": normalize_score(judge_result.score),
+        "comment": comment,
+        "metadata": metadata,
+    }
+
+
+# Backward-compatible alias — will be removed once all notebooks are migrated.
+to_langsmith_result = to_langfuse_evaluation
 
 
 def init_judge_model(
