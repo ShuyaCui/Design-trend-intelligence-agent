@@ -155,6 +155,36 @@ def init_langfuse():
     )
 
 
+def disable_langsmith():
+    """Remove LangSmith tracing env vars so traces go only to Langfuse.
+
+    Call immediately after ``load_dotenv()`` and before any LangChain
+    model or graph construction.
+    """
+    for key in (
+        "LANGSMITH_TRACING",
+        "LANGCHAIN_TRACING_V2",
+        "LANGSMITH_API_KEY",
+    ):
+        os.environ.pop(key, None)
+
+
+def init_langfuse_tracing():
+    """Create a Langfuse CallbackHandler for LangChain/LangGraph tracing.
+
+    Validates credentials via ``init_langfuse()`` before constructing
+    the handler so missing keys surface immediately.
+
+    Returns:
+        A ``langfuse.langchain.CallbackHandler`` instance.  Pass it in
+        the ``config["callbacks"]`` list when invoking a chain or graph.
+    """
+    from langfuse.langchain import CallbackHandler
+
+    init_langfuse()
+    return CallbackHandler()
+
+
 def init_judge_model(
     model: str = "azure_openai:GPT-54-2026-03-05",
     temperature: float = 0.0,
