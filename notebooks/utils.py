@@ -121,20 +121,26 @@ to_langsmith_result = to_langfuse_evaluation
 def init_langfuse():
     """Initialize a Langfuse client with fail-fast validation.
 
-    Reads ``LANGFUSE_PUBLIC_KEY``, ``LANGFUSE_SECRET_KEY``, and
-    ``LANGFUSE_HOST`` from the environment.  Raises immediately if
-    credentials are missing so notebooks surface a clear error instead
-    of silently creating a disabled client.
+    Reads ``LANGFUSE_PUBLIC_KEY``, ``LANGFUSE_SECRET_KEY``, and the
+    host URL (``LANGFUSE_HOST`` or ``LANGFUSE_BASE_URL``) from the
+    environment.  Raises immediately if credentials are missing so
+    notebooks surface a clear error instead of silently creating a
+    disabled client.
 
     Returns:
         A configured ``langfuse.Langfuse`` instance.
     """
     from langfuse import Langfuse
 
-    missing = [
-        k for k in ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
-        if not os.getenv(k)
-    ]
+    host = os.getenv("LANGFUSE_HOST") or os.getenv("LANGFUSE_BASE_URL")
+
+    missing = []
+    if not os.getenv("LANGFUSE_PUBLIC_KEY"):
+        missing.append("LANGFUSE_PUBLIC_KEY")
+    if not os.getenv("LANGFUSE_SECRET_KEY"):
+        missing.append("LANGFUSE_SECRET_KEY")
+    if not host:
+        missing.append("LANGFUSE_HOST (or LANGFUSE_BASE_URL)")
     if missing:
         raise EnvironmentError(
             f"Langfuse credentials not configured. "
@@ -145,7 +151,7 @@ def init_langfuse():
     return Langfuse(
         public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
         secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
-        host=os.getenv("LANGFUSE_HOST"),
+        host=host,
     )
 
 
