@@ -118,6 +118,73 @@ def to_langfuse_evaluation(
 to_langsmith_result = to_langfuse_evaluation
 
 
+def init_langfuse():
+    """Initialize a Langfuse client with fail-fast validation.
+
+    Reads ``LANGFUSE_PUBLIC_KEY``, ``LANGFUSE_SECRET_KEY``, and the
+    host URL (``LANGFUSE_HOST`` or ``LANGFUSE_BASE_URL``) from the
+    environment.  Raises immediately if credentials are missing so
+    notebooks surface a clear error instead of silently creating a
+    disabled client.
+
+    Returns:
+        A configured ``langfuse.Langfuse`` instance.
+    """
+    from langfuse import Langfuse
+
+    host = os.getenv("LANGFUSE_HOST") or os.getenv("LANGFUSE_BASE_URL")
+
+    missing = []
+    if not os.getenv("LANGFUSE_PUBLIC_KEY"):
+        missing.append("LANGFUSE_PUBLIC_KEY")
+    if not os.getenv("LANGFUSE_SECRET_KEY"):
+        missing.append("LANGFUSE_SECRET_KEY")
+    if not host:
+        missing.append("LANGFUSE_HOST (or LANGFUSE_BASE_URL)")
+    if missing:
+        raise EnvironmentError(
+            f"Langfuse credentials not configured. "
+            f"Missing env vars: {', '.join(missing)}. "
+            f"Set them in your .env file."
+        )
+
+    return Langfuse(
+        public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
+        secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
+        host=host,
+    )
+
+
+def disable_langsmith():
+    """Remove LangSmith tracing env vars so traces go only to Langfuse.
+
+    Call immediately after ``load_dotenv()`` and before any LangChain
+    model or graph construction.
+    """
+    for key in (
+        "LANGSMITH_TRACING",
+        "LANGCHAIN_TRACING_V2",
+        "LANGSMITH_API_KEY",
+    ):
+        os.environ.pop(key, None)
+
+
+def init_langfuse_tracing():
+    """Create a Langfuse CallbackHandler for LangChain/LangGraph tracing.
+
+    Validates credentials via ``init_langfuse()`` before constructing
+    the handler so missing keys surface immediately.
+
+    Returns:
+        A ``langfuse.langchain.CallbackHandler`` instance.  Pass it in
+        the ``config["callbacks"]`` list when invoking a chain or graph.
+    """
+    from langfuse.langchain import CallbackHandler
+
+    init_langfuse()
+    return CallbackHandler()
+
+
 def init_judge_model(
     model: str = "azure_openai:GPT-54-2026-03-05",
     temperature: float = 0.0,
