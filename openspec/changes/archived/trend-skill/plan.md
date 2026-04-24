@@ -1,5 +1,7 @@
 # Implementation Plan: Trend Analysis Dimension Skill
 
+> **Status: ARCHIVED — Implementation complete (Groups 0–5 committed on development branch).**
+
 ## Overview
 
 Extract analytical dimensions from 12 curated trend reports via a two-phase LLM pipeline running in `notebooks/6_trend_skill.ipynb`, then inject them dynamically into Scope and Supervisor prompts. The notebook is both the interactive tutorial and the runnable extraction tool. It also generates `trend_dimensions.py` via `%%writefile` cells.
