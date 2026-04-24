@@ -47,21 +47,16 @@ def get_today_str() -> str:
 
 
 def _build_scope_dimensions_section() -> str:
-    """Build the expert dimensions section for the scope prompt.
+    """Build the analytical dimensions list for trend decomposition in the scope prompt.
 
-    Returns a formatted section string when dimensions are available,
+    Returns a formatted dimension list when dimensions are available,
     or an empty string for graceful degradation.
     """
     dims = format_dimensions_for_prompt(load_trend_dimensions())
     if not dims:
         return ""
-    return (
-        "7. Expert Analytical Dimensions\n"
-        "- The following dimensions reflect how industry experts structure trend analysis "
-        "in this domain. In the research brief, enumerate the most relevant dimensions "
-        "so researchers know which angles to investigate:\n"
-        f"{dims}"
-    )
+    return f"Available analytical dimensions for trend decomposition:\n{dims}"
+
 
 # ===== CONFIGURATION =====
 
@@ -108,7 +103,7 @@ def clarify_with_user(state: AgentState, config: RunnableConfig) -> Command[Lite
     Routes to either research brief generation or ends with a clarification question.
 
     Model is controlled by config["configurable"]["scope_model"]
-    (default: "azure_openai:gpt-4.1").
+    (default: "azure_openai:GPT-4.1").
     """
     configurable = config.get("configurable", {})
     model = _build_model(configurable.get("scope_model", _DEFAULT_SCOPE_MODEL), temperature=0.0)
