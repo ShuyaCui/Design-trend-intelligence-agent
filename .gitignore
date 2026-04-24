@@ -11,4 +11,4 @@ trend_knowledge/history_trend_report_*.json
 # Ignore report files
 reports/
 # Ignore history report files
-history_reports/
+history_trend_report/
