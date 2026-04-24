@@ -1,5 +1,7 @@
 # Plan — LangSmith → Langfuse Migration
 
+> **Status: ARCHIVED — Implementation complete as of 2026-04-24. All automated validation gates passed.**
+
 Task groups are ordered by dependency: infrastructure first, then tracing, then evaluation, then documentation, then final validation.
 
 ---

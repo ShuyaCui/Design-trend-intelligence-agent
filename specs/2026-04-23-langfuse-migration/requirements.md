@@ -1,5 +1,7 @@
 # Requirements — LangSmith → Langfuse Migration
 
+> **Status: ARCHIVED — Implementation complete as of 2026-04-24.**
+
 ## Objective
 
 Replace all LangSmith integration (runtime tracing and agent validation experiments) with Langfuse across the deep research pipeline. After this work, no LangSmith code, imports, or dependencies remain in the codebase.

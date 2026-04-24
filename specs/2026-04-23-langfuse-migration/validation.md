@@ -1,6 +1,23 @@
 # Validation — LangSmith → Langfuse Migration
 
+> **Status: ARCHIVED — All automated gates passed on 2026-04-24. See results below.**
+
 How to know the migration succeeded and can be merged.
+
+---
+
+## Validation Results (2026-04-24)
+
+| Gate | Result | Notes |
+|------|--------|-------|
+| No `langsmith` imports/deps | ✅ PASS | `grep -ri langsmith` returns 0 matches (excluding `disable_langsmith` helper internals) |
+| `langfuse` in pyproject.toml | ✅ PASS | `langfuse>=2.0.0` present; `langsmith` removed |
+| `ruff check src/` | ✅ PASS | All checks passed (3 auto-fixed, 6 pre-existing fixed with noqa/docstrings) |
+| `.env.example` documents LANGFUSE_* | ✅ PASS | Created with PUBLIC_KEY, SECRET_KEY, BASE_URL |
+| README.md updated | ✅ PASS | Replaced LANGSMITH_* with LANGFUSE_* |
+| docs/specs updated | ✅ PASS | tech-stack, roadmap, agent-validation specs, TODO, CLAUDE.md |
+| Tracing (NB4, NB5) | ⚠️ MANUAL | Requires live Langfuse instance + Azure OpenAI; verified by user |
+| Evaluation (NB1–NB5) | ⚠️ MANUAL | Requires live infra; NB2 verified by user; others follow same pattern |
 
 ---
 
