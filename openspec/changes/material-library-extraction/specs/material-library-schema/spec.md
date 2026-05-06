@@ -29,15 +29,19 @@ Maturity MUST be one of: "主流", "上升", "实验性".
 - **WHEN** an element is created with `maturity: "emerging"`
 - **THEN** validation fails because only Chinese enum values are accepted
 
-### Requirement: Per-report output format (ReportExtraction)
-Each per-report JSON file SHALL contain: source_report (string), product_category (string), extraction_date (ISO date string), and elements (array of MaterialElement).
+### Requirement: Per-dimension output format
+Output SHALL be organized by dimension, not by report. Each dimension file (`color.json`, `decoration.json`, `texture.json`) SHALL contain elements from ALL processed reports, grouped by maturity level ("主流", "上升", "实验性"), with each element retaining its `source_report` and `product_category` for traceability.
 
-#### Scenario: Per-report file structure
-- **WHEN** `material_library/beverage.json` is generated
-- **THEN** it contains `source_report` matching the input filename, `product_category: "饮料"`, `extraction_date` as today's date, and an `elements` array
+#### Scenario: Color dimension file structure
+- **WHEN** `material_library/color.json` is generated from 3 reports
+- **THEN** it contains a `主流` array, an `上升` array, and an `实验性` array, each containing color elements from all 3 reports
+
+#### Scenario: Element traceability across reports
+- **WHEN** an element "琥珀金/蜂蜜色" appears in both shampoo and serum reports
+- **THEN** each instance appears in `color.json` with its respective `source_report` and `product_category`
 
 ### Requirement: Index metadata format
-`index.json` SHALL track: list of processed reports (filename, extraction_date, element_count, output_file), total element count, and last_updated timestamp.
+`index.json` SHALL track: list of processed reports (filename, extraction_date, element_count), per-dimension element counts, total element count, and last_updated timestamp.
 
 #### Scenario: Index tracks all processed reports
 - **WHEN** 3 reports are processed
@@ -45,18 +49,18 @@ Each per-report JSON file SHALL contain: source_report (string), product_categor
 
 #### Scenario: Index is updated incrementally
 - **WHEN** a 4th report is processed
-- **THEN** `index.json` adds a 4th entry without modifying the existing 3
+- **THEN** `index.json` adds a 4th entry; dimension files are rebuilt to include elements from all 4 reports
 
-### Requirement: Cross-reference format with combinability
-`cross_reference.json` SHALL organize elements by dimension, then by maturity level, with each element including: name, appears_in (list of categories), persona, and combinable_with (suggested compatible elements from other dimensions).
+### Requirement: Persona catalog with combinability
+`personas.json` SHALL contain: a catalog of all aesthetic personas with descriptions, and for each persona, example element combinations spanning all 3 dimensions. This serves as the cross-dimensional combinability reference.
 
-#### Scenario: Cross-reference groups by dimension
-- **WHEN** `cross_reference.json` is read
-- **THEN** it has top-level keys "颜色", "装饰物", "透明度与质地", each containing "主流", "上升", "实验性" sub-groups
+#### Scenario: Persona includes cross-dimension combinations
+- **WHEN** `personas.json` is read for persona "科技净澈"
+- **THEN** it lists typical color elements (e.g. "无色透明"), decoration elements (e.g. "微囊悬浮"), and texture elements (e.g. "高折光水感") that form a coherent combination
 
-#### Scenario: Combinability references are valid
-- **WHEN** a color element lists `combinable_with.装饰物: ["微囊悬浮"]`
-- **THEN** "微囊悬浮" exists as an actual element in the "装饰物" dimension
+#### Scenario: All element personas reference the catalog
+- **WHEN** any element's `aesthetic_persona` in `color.json`, `decoration.json`, or `texture.json` is checked
+- **THEN** it matches a persona defined in `personas.json`
 
 ### Requirement: Aesthetic persona catalog
 The system SHALL maintain a predefined persona catalog with at least 6 personas: 科技净澈, 天然奢养, 奢华克制, 感官甜品, 自然清体, 可视科技. Each persona SHALL have a description and typical element combinations.

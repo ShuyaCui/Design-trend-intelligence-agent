@@ -1,0 +1,342 @@
+{
+  "dimension": "装饰物",
+  "dimension_en": "decoration",
+  "last_updated": "2026-05-06T08:43:09",
+  "主流": [
+    {
+      "id": "31c325ee-decoration-f6d37395-6e2858",
+      "dimension": "装饰物",
+      "name": "奶盖与拉花",
+      "name_en": "Milk Foam and Latte Art",
+      "visual_keywords": [
+        "奶盖",
+        "芝士云顶",
+        "冷沫",
+        "奶泡",
+        "拿铁拉花"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "顶部装饰增强视觉吸引力",
+        "提供风味和口感结构",
+        "适合拍摄和社交分享"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "奶盖果茶、鲜奶茶、拿铁、馥芮白",
+      "source_section": "§5.1",
+      "source_heading": "趋势 7：奶盖/奶泡/拉花依然是最稳定的顶部视觉语言",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-2e6f89d7-379bb4",
+      "dimension": "装饰物",
+      "name": "杯中可见物",
+      "name_en": "Visible Ingredients in Cup",
+      "visual_keywords": [
+        "果肉",
+        "果片",
+        "冻类",
+        "珍珠",
+        "椰果"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "增加咀嚼感",
+        "增强视觉装饰功能",
+        "体现真实原料"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "鲜果茶、杨枝甘露系、果冻茶",
+      "source_section": "§5.1",
+      "source_heading": "趋势 8：果肉、果片、冻类、珍珠、椰果等“杯中可见物”继续常态化",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-f4fc79da-532d88",
+      "dimension": "装饰物",
+      "name": "花草类装饰",
+      "name_en": "Floral and Herbal Decorations",
+      "visual_keywords": [
+        "香草枝",
+        "迷迭香",
+        "薄荷",
+        "花瓣",
+        "花草元素"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "提升香气暗示",
+        "增强高级感",
+        "适合高质感摄影"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "鸡尾酒、无酒精特调、气泡咖啡",
+      "source_section": "§5.1",
+      "source_heading": "趋势 9：花草类装饰作为“视觉增香器”",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "a8425dfe-decoration-7594ae9e-628c0c",
+      "dimension": "装饰物",
+      "name": "珠光乳浊",
+      "name_en": "Pearlescent Emulsion",
+      "visual_keywords": [
+        "珠光",
+        "乳浊",
+        "白色不透明",
+        "高端视觉"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "高端感",
+        "技术精密",
+        "视觉吸引力"
+      ],
+      "maturity": "主流",
+      "year_range": "2025-2026",
+      "typical_use": "高端洗发水",
+      "source_section": "§4.1",
+      "source_heading": "当前最现实、最适合高端洗发水的装饰：珠光、分相、悬浮而非闪粉",
+      "source_report": "FY2526中国高端洗发水内容物设计趋势报告.md",
+      "product_category": "洗发水"
+    },
+    {
+      "id": "a8425dfe-decoration-34f36b80-01a9a5",
+      "dimension": "装饰物",
+      "name": "双相分层",
+      "name_en": "Dual-phase Layering",
+      "visual_keywords": [
+        "双相",
+        "分层",
+        "油水界面",
+        "视觉高级"
+      ],
+      "aesthetic_persona": "可视科技",
+      "signals": [
+        "科技感",
+        "高活性保存",
+        "视觉传播"
+      ],
+      "maturity": "主流",
+      "year_range": "2025-2026",
+      "typical_use": "高端护发产品",
+      "source_section": "§4.2",
+      "source_heading": "已实际上市、公开可见的装饰型方向",
+      "source_report": "FY2526中国高端洗发水内容物设计趋势报告.md",
+      "product_category": "洗发水"
+    },
+    {
+      "id": "d384cc19-decoration-a8e9075b-19e25b",
+      "dimension": "装饰物",
+      "name": "微金感悬浮",
+      "name_en": "Micro-Gold Suspension",
+      "visual_keywords": [
+        "细腻折光",
+        "微金感",
+        "珠光",
+        "悬浮"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "贵妇奢养",
+        "稀有成分",
+        "奢华修护"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端精华",
+      "source_section": "§2.5",
+      "source_heading": "可视化元素：2025年仍以克制为主，少量“看得见的成分结构”作为亮点",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-decoration-d521a675-49cb52",
+      "dimension": "装饰物",
+      "name": "油珠悬浮",
+      "name_en": "Oil Droplet Suspension",
+      "visual_keywords": [
+        "双相结构",
+        "油珠悬浮",
+        "精致均匀",
+        "稳定"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "天然精华油与水基活性并存",
+        "新鲜现混",
+        "成分丰富"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "植物精华、修护油精华",
+      "source_section": "§2.5",
+      "source_heading": "可视化元素：2025年仍以克制为主，少量“看得见的成分结构”作为亮点",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    }
+  ],
+  "上升": [
+    {
+      "id": "31c325ee-decoration-c007d69f-45fcb6",
+      "dimension": "装饰物",
+      "name": "顶部风味碎料",
+      "name_en": "Flavor Crumbs on Top",
+      "visual_keywords": [
+        "咸海苔碎",
+        "苏打饼干碎",
+        "奶酪颗粒",
+        "菌菇酱感",
+        "芝士粉"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "增强新鲜感",
+        "形成社交传播亮点",
+        "体现独特风味"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2025",
+      "typical_use": "咸奶茶、法酪鲜奶茶、芝士可可",
+      "source_section": "§5.2",
+      "source_heading": "趋势 10：咸奶盖、法酪顶、奶酪顶与顶部风味碎料",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-42a681da-abc39a",
+      "dimension": "装饰物",
+      "name": "液体内部纤维感",
+      "name_en": "Fiber Texture in Liquid",
+      "visual_keywords": [
+        "纤维",
+        "细粒",
+        "浆感",
+        "天然痕迹"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "体现健康信号",
+        "增强功能性叙事",
+        "视觉上更真实"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2025",
+      "typical_use": "果蔬茶、果蔬奶昔、打碎型现制果汁",
+      "source_section": "§5.2",
+      "source_heading": "趋势 11：液体内部的“纤维感装饰”",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-41bcb4c7-965b0d",
+      "dimension": "装饰物",
+      "name": "鸡尾酒化装饰",
+      "name_en": "Cocktail-style Decorations",
+      "visual_keywords": [
+        "果皮挂杯",
+        "香草枝",
+        "盐边",
+        "糖边",
+        "异形冰块"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "增强吧台饮感",
+        "提升视觉精致度",
+        "适合沉浸式体验"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2025",
+      "typical_use": "气泡咖啡、果咖、酒吧无酒精特调",
+      "source_section": "§5.2",
+      "source_heading": "趋势 12：鸡尾酒化装饰向咖啡和无酒精特调迁移",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "a8425dfe-decoration-af9230bc-819449",
+      "dimension": "装饰物",
+      "name": "悬浮微珠",
+      "name_en": "Suspended Microbeads",
+      "visual_keywords": [
+        "悬浮",
+        "微珠",
+        "精油封装",
+        "天然来源"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "活性封装",
+        "可持续性",
+        "高级护理"
+      ],
+      "maturity": "上升",
+      "year_range": "2025-2026",
+      "typical_use": "高端洗发水",
+      "source_section": "§4.2",
+      "source_heading": "已实际上市、公开可见的装饰型方向",
+      "source_report": "FY2526中国高端洗发水内容物设计趋势报告.md",
+      "product_category": "洗发水"
+    },
+    {
+      "id": "d384cc19-decoration-fdf992fd-0b216a",
+      "dimension": "装饰物",
+      "name": "肉眼可见微囊",
+      "name_en": "Visible Microcapsules",
+      "visual_keywords": [
+        "微囊",
+        "分步释放",
+        "封存",
+        "涂抹即破"
+      ],
+      "aesthetic_persona": "可视科技",
+      "signals": [
+        "活性新鲜",
+        "递送科技",
+        "高稳定封装",
+        "参与感"
+      ],
+      "maturity": "上升",
+      "year_range": "2025-2026",
+      "typical_use": "高端精华",
+      "source_section": "§2.5",
+      "source_heading": "可视化元素：2025年仍以克制为主，少量“看得见的成分结构”作为亮点",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    }
+  ],
+  "实验性": [
+    {
+      "id": "d384cc19-decoration-cccb75b3-b115e1",
+      "dimension": "装饰物",
+      "name": "透明基底中的悬浮珠粒",
+      "name_en": "Suspended Beads in Transparent Base",
+      "visual_keywords": [
+        "透明基底",
+        "悬浮珠粒",
+        "封存结构",
+        "颗粒化"
+      ],
+      "aesthetic_persona": "可视科技",
+      "signals": [
+        "高阶递送技术",
+        "精密制剂",
+        "仪式感与稀缺感"
+      ],
+      "maturity": "实验性",
+      "year_range": "2026",
+      "typical_use": "高端精华",
+      "source_section": "§3.2",
+      "source_heading": "2026新兴趋势一：微囊化、颗粒化、可见封存结构明显增加",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    }
+  ]
+}

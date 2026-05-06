@@ -87,15 +87,21 @@ class ReportExtraction(BaseModel):
     elements: list[MaterialElement]
 ```
 
-### Decision 6: 输出目录结构
+### Decision 6: 输出目录结构 — 按维度组织而非按报告
+
+**选择**: 按三个维度分文件存储，每个文件汇聚所有品类的元素。
+
+**替代方案**: 按报告分文件（beverage.json, shampoo.json, serum.json）。
+
+**理由**: 下游 AI 的典型查询是「给我所有主流颜色」而非「给我饮料报告的所有元素」，按维度组织更贴合消费模式，减少下游 AI 需要跨文件聚合的开销。
 
 ```
 material_library/
-├── index.json              # 全局元数据 + 处理记录
-├── beverage.json           # 饮料报告提取结果
-├── shampoo.json            # 洗发水报告提取结果
-├── serum.json              # 精华报告提取结果
-└── cross_reference.json    # 跨品类汇总（按维度 + 成熟度组织，含组合建议）
+├── index.json              # 全局元数据 + 处理记录（已处理报告列表、元素计数、时间戳）
+├── color.json              # 颜色维度：所有品类的颜色元素，按成熟度分组
+├── decoration.json         # 装饰物维度：所有品类的装饰物元素，按成熟度分组
+├── texture.json            # 透明度与质地维度：所有品类的透明度+质地元素，按成熟度分组
+└── personas.json           # Aesthetic persona 目录 + 跨维度组合建议
 ```
 
 ## Risks / Trade-offs

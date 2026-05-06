@@ -1,0 +1,267 @@
+{
+  "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+  "product_category": "面部精华",
+  "extraction_date": "2026-05-06",
+  "file_hash": "4c926586e8588f246790521b007c5007d343f448c15cd08aa210f80de493b6fb",
+  "elements": [
+    {
+      "id": "d384cc19-color-f54c9349-76e6f0",
+      "dimension": "颜色",
+      "name": "无色透明 / 高通透水光感",
+      "name_en": "Colorless Transparent / High Transparency Water Gloss",
+      "visual_keywords": [
+        "无色透明",
+        "高折光",
+        "高通透",
+        "均匀水膜",
+        "薄光泽",
+        "顺滑流速"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "高纯度",
+        "高活性",
+        "高稳定科技",
+        "奢华中的克制"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端修护型精华",
+      "source_section": "§2.1",
+      "source_heading": "主流底色：清透、纯净、轻金色成为“高级有效”的基础语法",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-color-bc574420-dcd5c2",
+      "dimension": "颜色",
+      "name": "浅金色 / 蜂蜜色 / 淡琥珀色",
+      "name_en": "Light Gold / Honey / Pale Amber",
+      "visual_keywords": [
+        "晨光蜂蜜",
+        "香槟金",
+        "浅茶金",
+        "稀释琥珀",
+        "透明基底",
+        "温润金色"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "贵价天然原料",
+        "高营养密度",
+        "贵妇滋养感",
+        "温润奢华"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "夜间抗老修护精华",
+      "source_section": "§2.1",
+      "source_heading": "主流底色：清透、纯净、轻金色成为“高级有效”的基础语法",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-color-5f0cbb62-86cb0e",
+      "dimension": "颜色",
+      "name": "乳白半透明 / 云雾感",
+      "name_en": "Milky Translucent / Cloudy",
+      "visual_keywords": [
+        "乳白半透明",
+        "雾感凝乳色",
+        "柔和低刺激",
+        "包裹感",
+        "科学乳化体系"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "专业",
+        "安全",
+        "肤感高级",
+        "修护有底气"
+      ],
+      "maturity": "上升",
+      "year_range": "2025",
+      "typical_use": "敏感肌高端修护精华",
+      "source_section": "§2.1",
+      "source_heading": "主流底色：清透、纯净、轻金色成为“高级有效”的基础语法",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-decoration-a8e9075b-19e25b",
+      "dimension": "装饰物",
+      "name": "微金感悬浮",
+      "name_en": "Micro-Gold Suspension",
+      "visual_keywords": [
+        "细腻折光",
+        "微金感",
+        "珠光",
+        "悬浮"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "贵妇奢养",
+        "稀有成分",
+        "奢华修护"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端精华",
+      "source_section": "§2.5",
+      "source_heading": "可视化元素：2025年仍以克制为主，少量“看得见的成分结构”作为亮点",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-decoration-fdf992fd-0b216a",
+      "dimension": "装饰物",
+      "name": "肉眼可见微囊",
+      "name_en": "Visible Microcapsules",
+      "visual_keywords": [
+        "微囊",
+        "分步释放",
+        "封存",
+        "涂抹即破"
+      ],
+      "aesthetic_persona": "可视科技",
+      "signals": [
+        "活性新鲜",
+        "递送科技",
+        "高稳定封装",
+        "参与感"
+      ],
+      "maturity": "上升",
+      "year_range": "2025-2026",
+      "typical_use": "高端精华",
+      "source_section": "§2.5",
+      "source_heading": "可视化元素：2025年仍以克制为主，少量“看得见的成分结构”作为亮点",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-decoration-d521a675-49cb52",
+      "dimension": "装饰物",
+      "name": "油珠悬浮",
+      "name_en": "Oil Droplet Suspension",
+      "visual_keywords": [
+        "双相结构",
+        "油珠悬浮",
+        "精致均匀",
+        "稳定"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "天然精华油与水基活性并存",
+        "新鲜现混",
+        "成分丰富"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "植物精华、修护油精华",
+      "source_section": "§2.5",
+      "source_heading": "可视化元素：2025年仍以克制为主，少量“看得见的成分结构”作为亮点",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-decoration-cccb75b3-b115e1",
+      "dimension": "装饰物",
+      "name": "透明基底中的悬浮珠粒",
+      "name_en": "Suspended Beads in Transparent Base",
+      "visual_keywords": [
+        "透明基底",
+        "悬浮珠粒",
+        "封存结构",
+        "颗粒化"
+      ],
+      "aesthetic_persona": "可视科技",
+      "signals": [
+        "高阶递送技术",
+        "精密制剂",
+        "仪式感与稀缺感"
+      ],
+      "maturity": "实验性",
+      "year_range": "2026",
+      "typical_use": "高端精华",
+      "source_section": "§3.2",
+      "source_heading": "2026新兴趋势一：微囊化、颗粒化、可见封存结构明显增加",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-texture-e9826d3a-af7a2e",
+      "dimension": "透明度与质地",
+      "name": "高通透液态基底",
+      "name_en": "High Transparency Liquid Base",
+      "visual_keywords": [
+        "透明",
+        "液态",
+        "均匀反光",
+        "丝绸状流痕"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "高纯净度",
+        "高科技感",
+        "高价合理性"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端奢华精华",
+      "source_section": "§2.2",
+      "source_heading": "透明度与通透感：2025年的“贵”，不是浑浊厚重，而是高纯、高净、高折光",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-texture-52a1fbb1-8a4e4f",
+      "dimension": "透明度与质地",
+      "name": "中低到中等黏度",
+      "name_en": "Medium to Low Viscosity",
+      "visual_keywords": [
+        "中低黏度",
+        "连续性",
+        "细腻光泽",
+        "柔润感"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "肤感升级",
+        "现代科技感",
+        "精密递送"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端奢华精华",
+      "source_section": "§2.3",
+      "source_heading": "质地、黏度与流动性：从“厚重即高端”转向“有分量但轻盈”",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-texture-9975290a-9cb9eb",
+      "dimension": "透明度与质地",
+      "name": "丝缎光",
+      "name_en": "Silky Satin Glow",
+      "visual_keywords": [
+        "丝缎光",
+        "水润镜面光",
+        "柔润内发光",
+        "液晶感反光"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "精细化光泽",
+        "低调贵气",
+        "皮肤自然光感"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端奢华精华",
+      "source_section": "§2.4",
+      "source_heading": "光泽感：从“油亮”进化为“丝缎光、液晶光、润泽光”",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    }
+  ]
+}

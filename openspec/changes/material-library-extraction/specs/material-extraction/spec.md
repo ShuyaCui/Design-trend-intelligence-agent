@@ -56,12 +56,12 @@ The system SHALL skip reports that have already been processed (based on filenam
 - **THEN** all reports are re-processed regardless of previous extraction state
 
 ### Requirement: Cross-reference index generation
-After extracting all reports, the system SHALL generate a `cross_reference.json` that groups elements by dimension and maturity across all categories.
+After extracting all reports, the system SHALL generate per-dimension files (`color.json`, `decoration.json`, `texture.json`) that merge elements from all reports, grouped by maturity, and a `personas.json` with the aesthetic persona catalog and cross-dimension combinability.
 
-#### Scenario: Cross-category color comparison
-- **WHEN** cross_reference.json is generated from 3 reports
-- **THEN** the "颜色" section lists elements from all categories with `appears_in` arrays showing which reports contain each element
+#### Scenario: Per-dimension merging across categories
+- **WHEN** 3 reports are processed
+- **THEN** `color.json` contains all color elements from all 3 reports, each retaining `source_report` and `product_category` fields
 
-#### Scenario: Combinability hints in cross-reference
-- **WHEN** cross_reference.json is generated
-- **THEN** each element in the cross-reference includes a `combinable_with` field listing compatible elements from other dimensions, grouped by persona
+#### Scenario: Combinability via persona catalog
+- **WHEN** `personas.json` is generated
+- **THEN** each persona entry lists compatible elements across all 3 dimensions, enabling downstream AI to pick coherent combinations

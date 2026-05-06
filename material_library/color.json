@@ -1,0 +1,249 @@
+{
+  "dimension": "颜色",
+  "dimension_en": "color",
+  "last_updated": "2026-05-06T08:43:09",
+  "主流": [
+    {
+      "id": "31c325ee-color-f60d96b2-cb7d45",
+      "dimension": "颜色",
+      "name": "茶棕",
+      "name_en": "Tea Brown",
+      "visual_keywords": [
+        "自然色调",
+        "低饱和",
+        "温暖"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "健康",
+        "天然",
+        "低人工感"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "果茶、奶茶",
+      "source_section": "4.1",
+      "source_heading": "趋势 1：原料本色与低人工感色彩",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-color-d74743ef-222fa7",
+      "dimension": "颜色",
+      "name": "透明清澈",
+      "name_en": "Transparent Clarity",
+      "visual_keywords": [
+        "透明",
+        "清澈",
+        "可见层次"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "品质信任",
+        "专业",
+        "轻盈"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "冷萃、气泡饮",
+      "source_section": "4.1",
+      "source_heading": "趋势 2：透明感与清透感成为“品质信任”的视觉语言",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-color-5179509f-4f98f0",
+      "dimension": "颜色",
+      "name": "柔和暖色系",
+      "name_en": "Soft Warm Tones",
+      "visual_keywords": [
+        "低饱和",
+        "温暖",
+        "醇厚"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "温和",
+        "甜品化",
+        "亲和"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "奶茶、拿铁",
+      "source_section": "4.1",
+      "source_heading": "趋势 3：奶白—米白—焦糖—茶褐的“柔和暖色”常态化",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "a8425dfe-color-25853a32-7583b9",
+      "dimension": "颜色",
+      "name": "清透无色",
+      "name_en": "Clear Transparent",
+      "visual_keywords": [
+        "透明",
+        "净澈",
+        "无色",
+        "高折光",
+        "实验室感"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "净澈清洁",
+        "头皮平衡",
+        "科学配方",
+        "低负担",
+        "温和但有效"
+      ],
+      "maturity": "主流",
+      "year_range": "2025-2026",
+      "typical_use": "高端头皮护理产品",
+      "source_section": "3.1",
+      "source_heading": "主流颜色方向：清透无色、浅琥珀、乳白、珍珠白",
+      "source_report": "FY2526中国高端洗发水内容物设计趋势报告.md",
+      "product_category": "洗发水"
+    },
+    {
+      "id": "a8425dfe-color-b9dfbd97-9a6c9c",
+      "dimension": "颜色",
+      "name": "浅琥珀",
+      "name_en": "Light Amber",
+      "visual_keywords": [
+        "琥珀色",
+        "蜂蜜金",
+        "浅茶金",
+        "透明",
+        "自然"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "植物油/精油真实存在感",
+        "养护浓度",
+        "奢宠护理",
+        "成分天然性",
+        "使用后柔亮光泽"
+      ],
+      "maturity": "主流",
+      "year_range": "2025-2026",
+      "typical_use": "高端护发产品",
+      "source_section": "3.1",
+      "source_heading": "主流颜色方向：清透无色、浅琥珀、乳白、珍珠白",
+      "source_report": "FY2526中国高端洗发水内容物设计趋势报告.md",
+      "product_category": "洗发水"
+    },
+    {
+      "id": "a8425dfe-color-c857ceec-3df88f",
+      "dimension": "颜色",
+      "name": "乳白",
+      "name_en": "Milky White",
+      "visual_keywords": [
+        "乳白",
+        "珍珠白",
+        "雾白",
+        "珠光",
+        "乳霜感"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "修护",
+        "柔护",
+        "珠光高级感",
+        "顺滑",
+        "丝缎"
+      ],
+      "maturity": "主流",
+      "year_range": "2025-2026",
+      "typical_use": "高端洗发水",
+      "source_section": "3.1",
+      "source_heading": "主流颜色方向：清透无色、浅琥珀、乳白、珍珠白",
+      "source_report": "FY2526中国高端洗发水内容物设计趋势报告.md",
+      "product_category": "洗发水"
+    },
+    {
+      "id": "d384cc19-color-f54c9349-76e6f0",
+      "dimension": "颜色",
+      "name": "无色透明 / 高通透水光感",
+      "name_en": "Colorless Transparent / High Transparency Water Gloss",
+      "visual_keywords": [
+        "无色透明",
+        "高折光",
+        "高通透",
+        "均匀水膜",
+        "薄光泽",
+        "顺滑流速"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "高纯度",
+        "高活性",
+        "高稳定科技",
+        "奢华中的克制"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "高端修护型精华",
+      "source_section": "§2.1",
+      "source_heading": "主流底色：清透、纯净、轻金色成为“高级有效”的基础语法",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    },
+    {
+      "id": "d384cc19-color-bc574420-dcd5c2",
+      "dimension": "颜色",
+      "name": "浅金色 / 蜂蜜色 / 淡琥珀色",
+      "name_en": "Light Gold / Honey / Pale Amber",
+      "visual_keywords": [
+        "晨光蜂蜜",
+        "香槟金",
+        "浅茶金",
+        "稀释琥珀",
+        "透明基底",
+        "温润金色"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "贵价天然原料",
+        "高营养密度",
+        "贵妇滋养感",
+        "温润奢华"
+      ],
+      "maturity": "主流",
+      "year_range": "2025",
+      "typical_use": "夜间抗老修护精华",
+      "source_section": "§2.1",
+      "source_heading": "主流底色：清透、纯净、轻金色成为“高级有效”的基础语法",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    }
+  ],
+  "上升": [
+    {
+      "id": "d384cc19-color-5f0cbb62-86cb0e",
+      "dimension": "颜色",
+      "name": "乳白半透明 / 云雾感",
+      "name_en": "Milky Translucent / Cloudy",
+      "visual_keywords": [
+        "乳白半透明",
+        "雾感凝乳色",
+        "柔和低刺激",
+        "包裹感",
+        "科学乳化体系"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "专业",
+        "安全",
+        "肤感高级",
+        "修护有底气"
+      ],
+      "maturity": "上升",
+      "year_range": "2025",
+      "typical_use": "敏感肌高端修护精华",
+      "source_section": "§2.1",
+      "source_heading": "主流底色：清透、纯净、轻金色成为“高级有效”的基础语法",
+      "source_report": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "product_category": "面部精华"
+    }
+  ],
+  "实验性": []
+}

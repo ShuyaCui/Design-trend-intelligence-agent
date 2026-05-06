@@ -1,0 +1,388 @@
+{
+  "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+  "product_category": "饮料",
+  "extraction_date": "2026-05-06",
+  "file_hash": "f62bf4786d09997cd3b17145bf874ba7bbafdfbd5babbc509c5d5220cad80108",
+  "elements": [
+    {
+      "id": "31c325ee-color-f60d96b2-cb7d45",
+      "dimension": "颜色",
+      "name": "茶棕",
+      "name_en": "Tea Brown",
+      "visual_keywords": [
+        "自然色调",
+        "低饱和",
+        "温暖"
+      ],
+      "aesthetic_persona": "天然奢养",
+      "signals": [
+        "健康",
+        "天然",
+        "低人工感"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "果茶、奶茶",
+      "source_section": "4.1",
+      "source_heading": "趋势 1：原料本色与低人工感色彩",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-color-d74743ef-222fa7",
+      "dimension": "颜色",
+      "name": "透明清澈",
+      "name_en": "Transparent Clarity",
+      "visual_keywords": [
+        "透明",
+        "清澈",
+        "可见层次"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "品质信任",
+        "专业",
+        "轻盈"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "冷萃、气泡饮",
+      "source_section": "4.1",
+      "source_heading": "趋势 2：透明感与清透感成为“品质信任”的视觉语言",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-color-5179509f-4f98f0",
+      "dimension": "颜色",
+      "name": "柔和暖色系",
+      "name_en": "Soft Warm Tones",
+      "visual_keywords": [
+        "低饱和",
+        "温暖",
+        "醇厚"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "温和",
+        "甜品化",
+        "亲和"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "奶茶、拿铁",
+      "source_section": "4.1",
+      "source_heading": "趋势 3：奶白—米白—焦糖—茶褐的“柔和暖色”常态化",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-f6d37395-6e2858",
+      "dimension": "装饰物",
+      "name": "奶盖与拉花",
+      "name_en": "Milk Foam and Latte Art",
+      "visual_keywords": [
+        "奶盖",
+        "芝士云顶",
+        "冷沫",
+        "奶泡",
+        "拿铁拉花"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "顶部装饰增强视觉吸引力",
+        "提供风味和口感结构",
+        "适合拍摄和社交分享"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "奶盖果茶、鲜奶茶、拿铁、馥芮白",
+      "source_section": "§5.1",
+      "source_heading": "趋势 7：奶盖/奶泡/拉花依然是最稳定的顶部视觉语言",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-2e6f89d7-379bb4",
+      "dimension": "装饰物",
+      "name": "杯中可见物",
+      "name_en": "Visible Ingredients in Cup",
+      "visual_keywords": [
+        "果肉",
+        "果片",
+        "冻类",
+        "珍珠",
+        "椰果"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "增加咀嚼感",
+        "增强视觉装饰功能",
+        "体现真实原料"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "鲜果茶、杨枝甘露系、果冻茶",
+      "source_section": "§5.1",
+      "source_heading": "趋势 8：果肉、果片、冻类、珍珠、椰果等“杯中可见物”继续常态化",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-f4fc79da-532d88",
+      "dimension": "装饰物",
+      "name": "花草类装饰",
+      "name_en": "Floral and Herbal Decorations",
+      "visual_keywords": [
+        "香草枝",
+        "迷迭香",
+        "薄荷",
+        "花瓣",
+        "花草元素"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "提升香气暗示",
+        "增强高级感",
+        "适合高质感摄影"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2025",
+      "typical_use": "鸡尾酒、无酒精特调、气泡咖啡",
+      "source_section": "§5.1",
+      "source_heading": "趋势 9：花草类装饰作为“视觉增香器”",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-c007d69f-45fcb6",
+      "dimension": "装饰物",
+      "name": "顶部风味碎料",
+      "name_en": "Flavor Crumbs on Top",
+      "visual_keywords": [
+        "咸海苔碎",
+        "苏打饼干碎",
+        "奶酪颗粒",
+        "菌菇酱感",
+        "芝士粉"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "增强新鲜感",
+        "形成社交传播亮点",
+        "体现独特风味"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2025",
+      "typical_use": "咸奶茶、法酪鲜奶茶、芝士可可",
+      "source_section": "§5.2",
+      "source_heading": "趋势 10：咸奶盖、法酪顶、奶酪顶与顶部风味碎料",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-42a681da-abc39a",
+      "dimension": "装饰物",
+      "name": "液体内部纤维感",
+      "name_en": "Fiber Texture in Liquid",
+      "visual_keywords": [
+        "纤维",
+        "细粒",
+        "浆感",
+        "天然痕迹"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "体现健康信号",
+        "增强功能性叙事",
+        "视觉上更真实"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2025",
+      "typical_use": "果蔬茶、果蔬奶昔、打碎型现制果汁",
+      "source_section": "§5.2",
+      "source_heading": "趋势 11：液体内部的“纤维感装饰”",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-decoration-41bcb4c7-965b0d",
+      "dimension": "装饰物",
+      "name": "鸡尾酒化装饰",
+      "name_en": "Cocktail-style Decorations",
+      "visual_keywords": [
+        "果皮挂杯",
+        "香草枝",
+        "盐边",
+        "糖边",
+        "异形冰块"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "增强吧台饮感",
+        "提升视觉精致度",
+        "适合沉浸式体验"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2025",
+      "typical_use": "气泡咖啡、果咖、酒吧无酒精特调",
+      "source_section": "§5.2",
+      "source_heading": "趋势 12：鸡尾酒化装饰向咖啡和无酒精特调迁移",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-texture-9e5061fb-5de621",
+      "dimension": "透明度与质地",
+      "name": "顺滑绵密厚乳",
+      "name_en": "Smooth Dense Thick Cream",
+      "visual_keywords": [
+        "液面平整",
+        "奶感饱满",
+        "流动性适中",
+        "丝滑",
+        "醇厚",
+        "绵云感"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "稳定好喝",
+        "大众偏好",
+        "乳制品升级"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2026",
+      "typical_use": "奶茶、鲜奶茶、厚乳拿铁",
+      "source_section": "6.1",
+      "source_heading": "趋势 13：顺滑、绵密、厚乳仍是奶茶与奶咖的基础主流",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-texture-fe0705af-9b1d74",
+      "dimension": "透明度与质地",
+      "name": "清透冰感气泡",
+      "name_en": "Clear Ice Bubble",
+      "visual_keywords": [
+        "清澈液体",
+        "冰块折射",
+        "细密气泡",
+        "冷冽视觉"
+      ],
+      "aesthetic_persona": "科技净澈",
+      "signals": [
+        "解渴",
+        "轻饮",
+        "干净"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2026",
+      "typical_use": "冷萃、气泡咖啡、苏打特调",
+      "source_section": "6.1",
+      "source_heading": "趋势 14：清透感、冰感、气泡感是夏季与轻饮方向的稳定结构",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-texture-2774882f-f05115",
+      "dimension": "透明度与质地",
+      "name": "分层流动感",
+      "name_en": "Layered Flowing Texture",
+      "visual_keywords": [
+        "明显界面",
+        "搅拌",
+        "倾倒",
+        "摇晃",
+        "流动过程"
+      ],
+      "aesthetic_persona": "可视科技",
+      "signals": [
+        "视觉戏剧性",
+        "风味结构",
+        "短视频传播"
+      ],
+      "maturity": "主流",
+      "year_range": "2023-2026",
+      "typical_use": "奶茶、奶咖、果咖",
+      "source_section": "6.1",
+      "source_heading": "趋势 15：分层流动感成为“喝之前就有戏”的视觉手法",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-texture-03ac1fca-33b655",
+      "dimension": "透明度与质地",
+      "name": "果蔬浆纤维浑浊",
+      "name_en": "Vegetable Pulp Fiber Turbidity",
+      "visual_keywords": [
+        "轻微颗粒",
+        "纤维",
+        "悬浮感",
+        "新鲜打出来的"
+      ],
+      "aesthetic_persona": "自然清体",
+      "signals": [
+        "健康",
+        "功能性",
+        "自然感"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2026",
+      "typical_use": "果蔬茶、果蔬汁",
+      "source_section": "6.2",
+      "source_heading": "趋势 16：果蔬浆感、纤维感、天然浑浊感",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-texture-4e5f6748-55ce75",
+      "dimension": "透明度与质地",
+      "name": "奶酪糊感",
+      "name_en": "Cheese Paste Texture",
+      "visual_keywords": [
+        "厚糊",
+        "布丁稠度",
+        "米乳感",
+        "绵厚"
+      ],
+      "aesthetic_persona": "感官甜品",
+      "signals": [
+        "甜品化",
+        "秋冬暖饮",
+        "咸口趋势"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2026",
+      "typical_use": "咸法酪米布布鲜奶茶",
+      "source_section": "6.2",
+      "source_heading": "趋势 17：奶酪糊感、米布布颗粒糊感、法酪绵厚感",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    },
+    {
+      "id": "31c325ee-texture-3fc659fe-9cb1c5",
+      "dimension": "透明度与质地",
+      "name": "气泡细密化",
+      "name_en": "Fine Bubble Texture",
+      "visual_keywords": [
+        "精细泡沫层",
+        "微气泡",
+        "云感表面",
+        "清透基底"
+      ],
+      "aesthetic_persona": "奢华克制",
+      "signals": [
+        "调酒技能",
+        "沉浸式体验",
+        "专业审美"
+      ],
+      "maturity": "上升",
+      "year_range": "2023-2026",
+      "typical_use": "气泡咖啡、鸡尾酒",
+      "source_section": "6.2",
+      "source_heading": "趋势 18：气泡细密化、发泡化、云雾化",
+      "source_report": "FY2526中国饮料内容物设计趋势报告.md",
+      "product_category": "饮料"
+    }
+  ]
+}
