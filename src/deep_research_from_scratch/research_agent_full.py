@@ -25,7 +25,6 @@ from deep_research_from_scratch.multi_agent_supervisor import supervisor_agent
 from deep_research_from_scratch.prompts import final_report_generation_prompt
 from deep_research_from_scratch.research_agent_scope import scope_research
 from deep_research_from_scratch.state_multi_agent_supervisor import SupervisorState
-from deep_research_from_scratch.state_scope import ResearchQuestion
 from deep_research_from_scratch.trend_dimensions import (
     format_dimensions_for_prompt,
     load_trend_dimensions,
@@ -117,7 +116,8 @@ async def final_report_generation(
     )
 
     notes = state.get("notes", [])
-    research_brief = state.get("research_brief", ResearchQuestion()).research_brief
+    rq = state.get("research_brief")
+    research_brief = rq.research_brief if rq else ""
     images = state.get("images", [])
 
     # Download images BEFORE report generation so local paths are available
