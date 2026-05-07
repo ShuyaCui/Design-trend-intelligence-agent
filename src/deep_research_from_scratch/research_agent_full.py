@@ -24,7 +24,7 @@ from deep_research_from_scratch.Helper import GenAIToken
 from deep_research_from_scratch.multi_agent_supervisor import supervisor_agent
 from deep_research_from_scratch.prompts import final_report_generation_prompt
 from deep_research_from_scratch.research_agent_scope import scope_research
-from deep_research_from_scratch.state_multi_agent_supervisor import SupervisorState
+from deep_research_from_scratch.state_scope import AgentState
 from deep_research_from_scratch.trend_dimensions import (
     format_dimensions_for_prompt,
     load_trend_dimensions,
@@ -88,7 +88,7 @@ def _build_report_dimensions_section() -> str:
 
 
 async def final_report_generation(
-    state: SupervisorState,
+    state: AgentState,
     config: RunnableConfig,
 ):
     """Generate the final comprehensive report from research findings.
@@ -122,7 +122,7 @@ async def final_report_generation(
 
     notes = state.get("notes", [])
     rq = state.get("research_brief")
-    research_brief = rq.research_brief if rq else ""
+    research_brief = rq.research_brief if hasattr(rq, "research_brief") else (rq or "")
     images = state.get("images", [])
 
     # Download images BEFORE report generation so local paths are available
@@ -178,7 +178,7 @@ async def final_report_generation(
 
 # ===== GRAPH CONSTRUCTION =====
 
-deep_researcher_builder = StateGraph(SupervisorState)
+deep_researcher_builder = StateGraph(AgentState)
 
 deep_researcher_builder.add_node("scope_research", scope_research)
 deep_researcher_builder.add_node("supervisor_agent", supervisor_agent)
