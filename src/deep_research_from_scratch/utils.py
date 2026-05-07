@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 
 import requests
 import urllib3
+from requests.exceptions import SSLError
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
@@ -169,6 +170,28 @@ def _build_summarization_model(
 
 tavily_client = TavilyClient()
 
+
+def _enable_insecure_requests_session() -> None:
+    """Force requests-backed HTTPS calls to skip certificate verification."""
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    if getattr(requests.Session, "_ssl_patched", False):
+        return
+
+    _orig_merge = requests.Session.merge_environment_settings
+
+    def _merge_no_verify(  # noqa: ANN001
+        self, url, proxies=None, stream=False, verify=True, cert=None,
+        *, _orig=_orig_merge,
+    ):
+        if proxies is None:
+            proxies = {}
+        settings = _orig(self, url, proxies, stream, verify, cert)
+        settings["verify"] = False
+        return settings
+
+    requests.Session.merge_environment_settings = _merge_no_verify
+    requests.Session._ssl_patched = True  # type: ignore[attr-defined]
+
 # ===== SEARCH FUNCTIONS =====
 
 def tavily_search_multiple(
@@ -193,13 +216,29 @@ def tavily_search_multiple(
     # Execute searches sequentially. Note: yon can use AsyncTavilyClient to parallelize this step.
     search_docs = []
     for query in search_queries:
-        result = tavily_client.search(
-            query,
-            max_results=max_results,
-            include_raw_content=include_raw_content,
-            topic=topic,
-            include_images=include_images,
-        )
+        try:
+            result = tavily_client.search(
+                query,
+                max_results=max_results,
+                include_raw_content=include_raw_content,
+                topic=topic,
+                include_images=include_images,
+            )
+        except SSLError as exc:
+            # Fallback for environments with self-signed proxy certificates.
+            logger.warning(
+                "Tavily SSL verification failed for query '%s'; retrying with verify=False: %s",
+                query,
+                exc,
+            )
+            _enable_insecure_requests_session()
+            result = tavily_client.search(
+                query,
+                max_results=max_results,
+                include_raw_content=include_raw_content,
+                topic=topic,
+                include_images=include_images,
+            )
         search_docs.append(result)
 
     return search_docs

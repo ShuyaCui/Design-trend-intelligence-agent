@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from requests.exceptions import SSLError
+
 from deep_research_from_scratch import multi_agent_supervisor
 from deep_research_from_scratch import research_agent
 from deep_research_from_scratch import research_agent_full
@@ -110,6 +112,22 @@ class AdditionalModelNormalizationTests(unittest.TestCase):
         kwargs = init_chat_model.call_args.kwargs
         self.assertEqual(kwargs["model"], "azure_openai:GPT-54-MINI-2026-03-17")
         self.assertEqual(kwargs["azure_deployment"], "GPT-54-MINI-2026-03-17")
+
+
+class TavilySslFallbackTests(unittest.TestCase):
+    def test_tavily_search_retries_once_on_ssl_error(self) -> None:
+        with patch.object(
+            research_utils.tavily_client,
+            "search",
+            side_effect=[
+                SSLError("certificate verify failed"),
+                {"results": [], "images": []},
+            ],
+        ) as mock_search:
+            results = research_utils.tavily_search_multiple(["test query"])
+
+        self.assertEqual(results, [{"results": [], "images": []}])
+        self.assertEqual(mock_search.call_count, 2)
 
 
 if __name__ == "__main__":
