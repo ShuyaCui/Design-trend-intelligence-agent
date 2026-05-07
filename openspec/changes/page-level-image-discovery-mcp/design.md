@@ -4,12 +4,15 @@
 
 This feature extends the current image-fetching architecture with a deterministic MCP enrichment stage that runs after Tavily identifies relevant source pages and before final image download. The design keeps Tavily as the search and result-ranking mechanism, while using MCP page tooling to extract image candidates directly from the source pages that support the research findings.
 
-The key design decision is to treat page-level image discovery as an internal enrichment pipeline, not as a new LLM-facing research tool. This keeps the existing research-agent control loop stable while improving image coverage and attribution.
+In addition to page-level discovery, the pipeline must enrich fetched images with structured metadata that can be linked to the material library dimensions (color, texture, decoration, style). This enables each image to be both traceable to source pages and reusable for material-library-driven analysis.
+
+The key design decision is to treat page-level image discovery and material linking as internal enrichment stages, not as new LLM-facing research tools. This keeps the existing research-agent control loop stable while improving image coverage, attribution, and downstream report value.
 
 ## Goals
 
 - Discover images from Tavily-hit pages even when Tavily does not expose them in its `images` field.
 - Populate page-aware metadata so each image can be traced back to a source page and nearby context.
+- Populate material-aware metadata so each image can be linked to material library entries for color, texture, decoration, and style.
 - Preserve compatibility with the existing `ImageResult` state flow, supervisor aggregation, image download, and report embedding.
 - Degrade gracefully when browser MCP tooling is unavailable by falling back to fetch / HTTP / DOM parsing.
 
@@ -29,8 +32,12 @@ Tavily search
        -> browser / Playwright MCP (preferred)
        -> fetch / HTTP / DOM MCP (fallback)
   -> normalized image candidates
+  -> download and image asset inspection
+  -> material-aware metadata enrichment
+       -> color/texture/decoration/style candidate matching
+       -> material library linking with confidence + evidence
   -> research state / supervisor state
-  -> local image download
+  -> local image download + metadata persistence
   -> final report Markdown embedding
 ```
 
@@ -83,7 +90,25 @@ Recommended v1 mapping:
 
 If needed during implementation, `ImageResult` may be extended with optional fields such as `page_title` or `discovery_method`, but the core report path should continue to work with the existing fields.
 
-### 4. Research-Agent Integration
+### 4. Material-Aware Enrichment and Linking
+
+After normalization and before final report synthesis, each candidate image should go through a material-aware enrichment step that combines page context and downloaded image facts.
+
+Recommended enrichment inputs:
+
+- page-level context (`source_page`, page title, `alt`, `figcaption`, nearby text)
+- basic fetched-image facts (content type, dimensions, optional dominant colors)
+- material library catalogs (`material_library/color.json`, `material_library/texture.json`, `material_library/decoration.json`, `material_library/style.json`)
+
+Recommended `ImageResult` optional extensions in v1:
+
+- `discovery_method`, `page_title`, `alt_text`, `figcaption`, `nearby_text`
+- `material_metadata` with `color_tags`, `texture_tags`, `decoration_tags`, `style_tags`
+- `material_library_links` containing stable targets (`element_id` or style name), confidence, and evidence details
+
+Linking behavior must remain constrained to known material-library entries in v1; the pipeline should not invent new dimension values during image linking.
+
+### 5. Research-Agent Integration
 
 The current `tavily_search` helper already extracts Tavily images and stores them for `tool_node` consumption. The new design adds page-level enrichment inside the same search helper layer so that the agent still observes one coherent search result.
 
@@ -98,13 +123,14 @@ Recommended flow inside the helper:
 
 This avoids adding a separate LLM tool call and keeps the agent policy unchanged.
 
-### 5. Download and Report Integration
+### 6. Download and Report Integration
 
 The existing local download path remains the final source of truth for report embedding. The only required changes are:
 
 - ensure page-discovered images enter the same `images` state path
-- preserve page-derived metadata in `images_metadata.json`
+- preserve page-derived and material-derived metadata in `images_metadata.json`
 - continue using local relative paths during report generation when downloads succeed
+- allow report generation to prioritize images with stronger material-library links when image count must be bounded
 
 ## File and Notebook Impact
 
@@ -134,6 +160,8 @@ Do not turn notebook 3 into the implementation home for this feature. It remains
 - If all MCP inspection fails, retain Tavily-only images so the feature degrades to current behavior.
 - If a page yields malformed image URLs, drop only those candidates, not the whole page result.
 - If image downloads fail, preserve metadata and allow report generation to continue.
+- If material linking fails for an image, preserve the base image record and page attribution instead of dropping the image.
+- If material metadata confidence is low, store links as low-confidence with evidence rather than suppressing all candidate links.
 
 ## Testing Strategy
 
@@ -144,6 +172,9 @@ Automated coverage is required for:
 - fallback from browser MCP to fetch / HTTP MCP
 - merging Tavily and page-discovered images without duplicate regressions
 - end-to-end preservation of page-derived metadata into download and report generation inputs
+- mapping of image metadata to material-library dimensions (color, texture, decoration, style)
+- persistence of confidence + evidence in `images_metadata.json`
+- deterministic behavior when no material-library match is found
 
 Use mocks or fixtures for MCP responses so tests do not depend on live MCP servers.
 
@@ -179,5 +210,5 @@ Make page discovery a separate LLM-visible MCP tool.
 ## Open Questions
 
 1. Should v1 cap the number of page images per source page, or defer that until ranking exists?
-2. Should `ImageResult` be extended now for `page_title` and `discovery_method`, or only if implementation pressure proves it necessary?
-3. Should the formatted tool output expose all discovered images, or only a bounded subset plus metadata persistence behind the scenes?
+2. Should material linking rely only on page text signals in v1, or include lightweight image-derived features (for example, dominant colors) from day one?
+3. Should the formatted tool output expose all discovered images, or only a bounded subset while persisting full metadata behind the scenes?
