@@ -9,6 +9,7 @@ import contextvars
 import json
 import logging
 import os
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -114,9 +115,7 @@ def get_runtime_config() -> dict:
     return dict(_runtime_config.get())
 
 
-_last_search_images: contextvars.ContextVar[list[ImageResult]] = (
-    contextvars.ContextVar("last_search_images", default=[])
-)
+_thread_local = threading.local()
 
 
 def get_last_search_images() -> list[ImageResult]:
@@ -124,13 +123,17 @@ def get_last_search_images() -> list[ImageResult]:
 
     Used by tool_node to pass image metadata into the agent state
     without changing the tool's string return interface.
+    LangChain copies the ContextVar context inside tool.invoke(), so
+    threading.local() is used instead — it is shared across copy_context().
     """
-    return list(_last_search_images.get())
+    return list(getattr(_thread_local, "last_search_images", []))
 
 
-_inspected_page_urls: contextvars.ContextVar[set[str]] = contextvars.ContextVar(
-    "inspected_page_urls", default=set()
-)
+def _get_inspected_urls() -> set[str]:
+    """Return the per-thread URL skip set, initialising on first access."""
+    if not hasattr(_thread_local, "inspected_page_urls"):
+        _thread_local.inspected_page_urls = set()
+    return _thread_local.inspected_page_urls
 
 
 def reset_page_discovery_cache() -> None:
@@ -138,7 +141,8 @@ def reset_page_discovery_cache() -> None:
 
     Call in tests for isolation between test cases.
     """
-    _inspected_page_urls.set(set())
+    _thread_local.inspected_page_urls = set()
+    _thread_local.last_search_images = []
 
 
 def normalize_model_id(model_id: str) -> str:
@@ -535,7 +539,7 @@ def batch_discover_images(
     Returns:
         Flat list of ImageResult objects from all successfully fetched pages.
     """
-    skip_set: set[str] = _inspected_page_urls.get().copy()
+    skip_set = _get_inspected_urls().copy()
     new_urls = [u for u in urls if u not in skip_set]
 
     if not new_urls:
@@ -561,7 +565,7 @@ def batch_discover_images(
                 except Exception as exc:
                     logger.warning("Unexpected error for %s: %s", page_url, exc)
 
-    _inspected_page_urls.set(skip_set | set(new_urls))
+    _thread_local.inspected_page_urls = skip_set | set(new_urls)
     return all_results
 
 
@@ -642,7 +646,7 @@ def tavily_search(
 
     # Merge: dedup + backfill source_page on Tavily entries
     merged_images = merge_image_lists(tavily_images, page_images)
-    _last_search_images.set(merged_images)
+    _thread_local.last_search_images = merged_images
 
     unique_results = deduplicate_search_results(search_results)
     summarized_results = process_search_results(unique_results)
