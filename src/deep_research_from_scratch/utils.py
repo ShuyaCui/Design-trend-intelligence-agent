@@ -796,8 +796,11 @@ def download_images(
                 updated.append(img)  # keep original without local_path
 
     # Persist structured metadata alongside downloaded images
-    metadata_path = output_path / "images_metadata.json"
-    metadata = [i.model_dump() for i in updated]
-    metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False))
+    try:
+        metadata_path = output_path / "images_metadata.json"
+        metadata = [i.model_dump() for i in updated]
+        metadata_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False))
+    except Exception as e:
+        logger.error("Failed to write images_metadata.json: %s", e)
 
     return updated
