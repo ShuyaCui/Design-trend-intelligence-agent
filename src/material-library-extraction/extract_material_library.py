@@ -303,7 +303,17 @@ def extract_single_report(
     report_text = report_path.read_text(encoding="utf-8")
     category = _infer_category(report_path)
     # Stable identifier used for caching / index tracking.
-    source_label = report_id or report_path.name
+    # For nested layout (UUID subdir), include the parent dir name so the path
+    # is unique and traceable (e.g. "e9f1f27f-.../report.md").
+    if report_id:
+        source_label = report_id
+    else:
+        parent = report_path.parent
+        source_label = (
+            f"{parent.name}/{report_path.name}"
+            if len(parent.name) == 36 and parent.name.count("-") == 4
+            else report_path.name
+        )
     chapters = _split_report_into_chapters(report_text)
 
     model = _build_model(model_id, temperature=0.0)

@@ -1,33 +1,18 @@
 {
-  "last_updated": "2026-05-06T09:10:17",
-  "total_elements": 162,
-  "color_count": 50,
-  "decoration_count": 40,
-  "texture_count": 72,
+  "last_updated": "2026-05-12T06:20:41",
+  "total_elements": 26,
+  "color_count": 8,
+  "decoration_count": 8,
+  "texture_count": 8,
+  "style_count": 2,
   "processed_reports": [
     {
-      "filename": "FY2526中国饮料内容物设计趋势报告.md",
-      "product_category": "饮料",
-      "extraction_date": "2026-05-06",
-      "file_hash": "f62bf4786d09997cd3b17145bf874ba7bbafdfbd5babbc509c5d5220cad80108",
-      "element_count": 71,
-      "cache_path": ".cache/FY2526中国饮料内容物设计趋势报告.json"
-    },
-    {
-      "filename": "FY2526中国高端洗发水内容物设计趋势报告.md",
-      "product_category": "洗发水",
-      "extraction_date": "2026-05-06",
-      "file_hash": "f83faa3ce5b47236193d22bcf25b992f742caa9664f47755ab7c679373935ee4",
-      "element_count": 70,
-      "cache_path": ".cache/FY2526中国高端洗发水内容物设计趋势报告.json"
-    },
-    {
-      "filename": "FY2526中国高端面部精华内容物设计趋势报告.md",
+      "filename": "e9f1f27f-2779-4214-82a4-fa5c64f36343/report.md",
       "product_category": "面部精华",
-      "extraction_date": "2026-05-06",
-      "file_hash": "4c926586e8588f246790521b007c5007d343f448c15cd08aa210f80de493b6fb",
-      "element_count": 21,
-      "cache_path": ".cache/FY2526中国高端面部精华内容物设计趋势报告.json"
+      "extraction_date": "2026-05-12",
+      "file_hash": "b652d039a7e6638b4475d27451d3e58b6790b717df81506999d8e097a6a0dfc0",
+      "element_count": 26,
+      "cache_path": ".cache/e9f1f27f-2779-4214-82a4-fa5c64f36343.json"
     }
   ]
 }
