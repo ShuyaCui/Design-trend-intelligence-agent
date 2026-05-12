@@ -30,7 +30,7 @@ material_library/
 | `signals` | 向消费者传达的信息（2-5项） |
 | `maturity` | 主流 / 上升 / 实验性 |
 | `typical_use` | 典型使用场景 |
-| `source_report` | 来源报告文件名 |
+| `source_report` | 来源报告标识（嵌套格式为 `{uuid}/report.md`） |
 | `product_category` | 产品品类（饮料/洗发水/面部精华） |
 
 ## 使用方法
@@ -43,8 +43,17 @@ uv run python src/material-library-extraction/extract_material_library.py
 
 ### 增量更新（新增报告后）
 
+报告需放在 `reports/` 的子目录中，目录名为唯一 ID（如 UUID）：
+
+```
+reports/
+└── e602b08d-bcdd-452c-95d0-823ae66e19e3/
+    ├── report.md
+    └── images/
+```
+
 ```bash
-# 将新报告放入 reports/ 目录，然后运行：
+# 将新报告目录放入 reports/，然后运行：
 uv run python src/material-library-extraction/extract_material_library.py
 # 只会提取新文件，已处理的报告会跳过
 ```
