@@ -440,19 +440,90 @@ def extract_all_reports(
 # Build dimension files
 # ---------------------------------------------------------------------------
 
+_MATURITY_RANK: dict[str, int] = {"主流": 0, "上升": 1, "实验性": 2}
+
+
+def _deduplicate_elements(elements: list[MaterialElement]) -> list[MaterialElement]:
+    """Merge elements with the same (dimension, name) across multiple reports.
+
+    Merge rules:
+    - maturity: keep the highest (主流 > 上升 > 实验性)
+    - visual_keywords / signals: union, deduped, order-preserving
+    - source_report: join distinct sources with " + "
+    - all other fields: take from the highest-maturity entry
+    """
+    from collections import defaultdict
+
+    groups: dict[tuple[str, str], list[MaterialElement]] = defaultdict(list)
+    for elem in elements:
+        groups[(elem.dimension, elem.name)].append(elem)
+
+    merged: list[MaterialElement] = []
+    for (dim, name), group in groups.items():
+        if len(group) == 1:
+            merged.append(group[0])
+            continue
+
+        # Sort so highest maturity comes first
+        group.sort(key=lambda e: _MATURITY_RANK.get(e.maturity, 99))
+        primary = group[0]
+
+        # Union of list fields (order-preserving dedup)
+        seen_kw: set[str] = set()
+        merged_kw: list[str] = []
+        for e in group:
+            for kw in e.visual_keywords:
+                if kw not in seen_kw:
+                    seen_kw.add(kw)
+                    merged_kw.append(kw)
+
+        seen_sig: set[str] = set()
+        merged_sig: list[str] = []
+        for e in group:
+            for sig in e.signals:
+                if sig not in seen_sig:
+                    seen_sig.add(sig)
+                    merged_sig.append(sig)
+
+        # Distinct source reports
+        sources = list(dict.fromkeys(e.source_report for e in group if e.source_report))
+        merged_source = " + ".join(sources)
+
+        result = primary.model_copy(
+            update={
+                "visual_keywords": merged_kw,
+                "signals": merged_sig,
+                "source_report": merged_source,
+            }
+        )
+        logger.info(
+            "Merged %d '%s' (%s) entries → maturity=%s, sources=[%s]",
+            len(group),
+            name,
+            dim,
+            result.maturity,
+            merged_source,
+        )
+        merged.append(result)
+
+    return merged
+
 
 def build_dimension_files(
     extractions: list[ReportExtraction],
     output_dir: Path,
 ) -> dict[str, int]:
-    """Split all elements by dimension, group by maturity, write JSON files.
+    """Split all elements by dimension, deduplicate by name, group by maturity, write JSON files.
 
-    Returns a dict of dimension -> element count.
+    Returns a dict of dimension -> element count (post-deduplication).
     """
     # Collect all elements
     all_elements: list[MaterialElement] = []
     for ext in extractions:
         all_elements.extend(ext.elements)
+
+    # Deduplicate same-name elements within each dimension
+    all_elements = _deduplicate_elements(all_elements)
 
     counts: dict[str, int] = {}
 
