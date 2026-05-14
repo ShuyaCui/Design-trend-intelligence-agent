@@ -142,7 +142,8 @@ async def final_report_generation(
     if downloaded_images:
         lines = []
         for i, img in enumerate(downloaded_images, 1):
-            path = img.local_path or img.url
+            # Use relative path so the report is portable regardless of where it is opened
+            path = ("images/" + Path(img.local_path).name) if img.local_path else img.url
             line = f"[{i}] {img.title or img.url}"
             if img.description:
                 line += f"\n    Description: {img.description}"
