@@ -579,15 +579,51 @@ def extract_all_reports(
 _MATURITY_RANK: dict[str, int] = {"主流": 0, "上升": 1, "实验性": 2}
 
 
-def _deduplicate_elements(elements: list[MaterialElement]) -> list[MaterialElement]:
-    """Merge elements with the same (dimension, name) across multiple reports.
+def _merge_group(group: list[MaterialElement]) -> MaterialElement:
+    """Merge a group of MaterialElements into one canonical entry.
 
-    Merge rules:
+    Rules:
     - maturity: keep the highest (主流 > 上升 > 实验性)
     - visual_keywords / signals: union, deduped, order-preserving
     - source_report: join distinct sources with " + "
-    - all other fields: take from the highest-maturity entry
+    - all other fields: taken from the highest-maturity entry
     """
+    if len(group) == 1:
+        return group[0]
+
+    group = sorted(group, key=lambda e: _MATURITY_RANK.get(e.maturity, 99))
+    primary = group[0]
+
+    seen_kw: set[str] = set()
+    merged_kw: list[str] = []
+    for e in group:
+        for kw in e.visual_keywords:
+            if kw not in seen_kw:
+                seen_kw.add(kw)
+                merged_kw.append(kw)
+
+    seen_sig: set[str] = set()
+    merged_sig: list[str] = []
+    for e in group:
+        for sig in e.signals:
+            if sig not in seen_sig:
+                seen_sig.add(sig)
+                merged_sig.append(sig)
+
+    sources = list(dict.fromkeys(e.source_report for e in group if e.source_report))
+    merged_source = " + ".join(sources)
+
+    return primary.model_copy(
+        update={
+            "visual_keywords": merged_kw,
+            "signals": merged_sig,
+            "source_report": merged_source,
+        }
+    )
+
+
+def _deduplicate_elements(elements: list[MaterialElement]) -> list[MaterialElement]:
+    """Merge elements with the same (dimension, name) across multiple reports."""
     from collections import defaultdict
 
     groups: dict[tuple[str, str], list[MaterialElement]] = defaultdict(list)
@@ -596,60 +632,153 @@ def _deduplicate_elements(elements: list[MaterialElement]) -> list[MaterialEleme
 
     merged: list[MaterialElement] = []
     for (dim, name), group in groups.items():
-        if len(group) == 1:
-            merged.append(group[0])
-            continue
-
-        # Sort so highest maturity comes first
-        group.sort(key=lambda e: _MATURITY_RANK.get(e.maturity, 99))
-        primary = group[0]
-
-        # Union of list fields (order-preserving dedup)
-        seen_kw: set[str] = set()
-        merged_kw: list[str] = []
-        for e in group:
-            for kw in e.visual_keywords:
-                if kw not in seen_kw:
-                    seen_kw.add(kw)
-                    merged_kw.append(kw)
-
-        seen_sig: set[str] = set()
-        merged_sig: list[str] = []
-        for e in group:
-            for sig in e.signals:
-                if sig not in seen_sig:
-                    seen_sig.add(sig)
-                    merged_sig.append(sig)
-
-        # Distinct source reports
-        sources = list(dict.fromkeys(e.source_report for e in group if e.source_report))
-        merged_source = " + ".join(sources)
-
-        result = primary.model_copy(
-            update={
-                "visual_keywords": merged_kw,
-                "signals": merged_sig,
-                "source_report": merged_source,
-            }
-        )
-        logger.info(
-            "Merged %d '%s' (%s) entries → maturity=%s, sources=[%s]",
-            len(group),
-            name,
-            dim,
-            result.maturity,
-            merged_source,
-        )
+        result = _merge_group(group)
+        if len(group) > 1:
+            logger.info(
+                "Merged %d '%s' (%s) entries → maturity=%s, sources=[%s]",
+                len(group),
+                name,
+                dim,
+                result.maturity,
+                result.source_report,
+            )
         merged.append(result)
 
     return merged
 
 
+def _union_find_clusters(n: int, pairs: list[tuple[int, int]]) -> list[list[int]]:
+    """Group indices into clusters using Union-Find.
+
+    Args:
+        n: Total number of elements.
+        pairs: Index pairs (i, j) that should be in the same cluster.
+
+    Returns:
+        List of clusters, each cluster is a sorted list of indices.
+        Singletons are included as single-element lists.
+    """
+    parent = list(range(n))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(x: int, y: int) -> None:
+        parent[find(x)] = find(y)
+
+    for i, j in pairs:
+        union(i, j)
+
+    from collections import defaultdict
+
+    clusters: dict[int, list[int]] = defaultdict(list)
+    for idx in range(n):
+        clusters[find(idx)].append(idx)
+    return list(clusters.values())
+
+
+def _build_embedding_model():
+    """Build an AzureOpenAIEmbeddings client for TEXT-EMBEDDING-3-SMALL."""
+    from langchain_openai import AzureOpenAIEmbeddings
+
+    return AzureOpenAIEmbeddings(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        deployment="TEXT-EMBEDDING-3-SMALL",
+        api_version="2024-09-01-preview",
+        api_key=GenAIToken().token(),
+        default_headers={
+            "project-name": os.getenv("HEADERS_PROJECT_NAME"),
+            "userid": os.getenv("HEADERS_USERID"),
+        },
+    )
+
+
+def _semantic_deduplicate_elements(
+    elements: list[MaterialElement],
+    threshold: float = 0.7,
+) -> list[MaterialElement]:
+    """Merge semantically similar elements within each dimension using embeddings.
+
+    For each dimension, batch-embeds all element ``name`` fields via
+    text-embedding-3-small, computes pairwise cosine similarity, and merges
+    any pair whose similarity exceeds ``threshold`` using the same rules as
+    :func:`_merge_group`.  Union-Find ensures transitive groups are handled
+    correctly and the result is order-independent.
+
+    Args:
+        elements: Elements after exact-name deduplication.
+        threshold: Cosine similarity threshold above which two elements are merged.
+
+    Returns:
+        Elements with semantic duplicates merged.
+    """
+    from collections import defaultdict
+
+    import numpy as np
+
+    embedding_model = _build_embedding_model()
+
+    by_dim: dict[str, list[MaterialElement]] = defaultdict(list)
+    for elem in elements:
+        by_dim[elem.dimension].append(elem)
+
+    result: list[MaterialElement] = []
+
+    for dim, dim_elems in by_dim.items():
+        if len(dim_elems) <= 1:
+            result.extend(dim_elems)
+            continue
+
+        names = [e.name for e in dim_elems]
+        vectors = np.array(embedding_model.embed_documents(names), dtype=float)
+
+        # Normalise rows for fast cosine similarity via dot product
+        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1.0, norms)
+        unit_vecs = vectors / norms
+
+        # Collect pairs above threshold (upper triangle only)
+        n = len(dim_elems)
+        above_threshold: list[tuple[int, int]] = []
+        sim_matrix = unit_vecs @ unit_vecs.T
+        for i in range(n):
+            for j in range(i + 1, n):
+                if sim_matrix[i, j] > threshold:
+                    above_threshold.append((i, j))
+
+        clusters = _union_find_clusters(n, above_threshold)
+
+        for cluster in clusters:
+            group = [dim_elems[idx] for idx in cluster]
+            merged = _merge_group(group)
+            if len(group) > 1:
+                merged_names = [e.name for e in group]
+                logger.info(
+                    "Semantic-merged %d (%s) entries %s → '%s' maturity=%s",
+                    len(group),
+                    dim,
+                    merged_names,
+                    merged.name,
+                    merged.maturity,
+                )
+            result.append(merged)
+
+    return result
+
+
 def build_dimension_files(
     extractions: list[ReportExtraction],
     output_dir: Path,
+    semantic_dedup: bool = True,
 ) -> dict[str, int]:
-    """Split all elements by dimension, deduplicate by name, group by maturity, write JSON files.
+    """Split all elements by dimension, deduplicate, group by maturity, write JSON files.
+
+    Performs two deduplication passes:
+    1. Exact-name deduplication (always).
+    2. Semantic deduplication via text-embedding-3-small (when ``semantic_dedup=True``).
 
     Returns a dict of dimension -> element count (post-deduplication).
     """
@@ -658,8 +787,14 @@ def build_dimension_files(
     for ext in extractions:
         all_elements.extend(ext.elements)
 
-    # Deduplicate same-name elements within each dimension
+    # Pass 1: deduplicate exact-name matches within each dimension
     all_elements = _deduplicate_elements(all_elements)
+
+    # Pass 2: semantic deduplication via embeddings
+    if semantic_dedup:
+        logger.info("Running semantic deduplication (threshold=0.7)…")
+        all_elements = _semantic_deduplicate_elements(all_elements)
+        logger.info("After semantic dedup: %d elements total", len(all_elements))
 
     counts: dict[str, int] = {}
 
@@ -773,6 +908,11 @@ def main() -> None:
         default=None,
         help="Override LLM model ID (e.g. azure_openai:gpt-4o-2024-11-20)",
     )
+    parser.add_argument(
+        "--no-semantic-dedup",
+        action="store_true",
+        help="Skip embedding-based semantic deduplication (exact-name dedup still runs)",
+    )
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -789,6 +929,7 @@ def main() -> None:
     logger.info("Reports: %s", args.reports_dir)
     logger.info("Output:  %s", args.output_dir)
     logger.info("Force:   %s", args.force)
+    logger.info("Semantic dedup: %s", not args.no_semantic_dedup)
 
     # 1. Extract
     extractions = extract_all_reports(
@@ -803,7 +944,11 @@ def main() -> None:
         return
 
     # 2. Build dimension files
-    dim_counts = build_dimension_files(extractions, args.output_dir)
+    dim_counts = build_dimension_files(
+        extractions,
+        args.output_dir,
+        semantic_dedup=not args.no_semantic_dedup,
+    )
 
     # 3. Update index
     update_index(extractions, args.output_dir, dim_counts)
