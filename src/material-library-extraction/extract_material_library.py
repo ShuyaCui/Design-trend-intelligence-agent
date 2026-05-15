@@ -584,7 +584,8 @@ def _merge_group(group: list[MaterialElement]) -> MaterialElement:
 
     Rules:
     - maturity: keep the highest (主流 > 上升 > 实验性)
-    - visual_keywords / signals: union, deduped, order-preserving
+    - visual_keywords / signals: union, deduped, order-preserving, then trimmed
+      to at most _KEYWORD_LIMIT items by embedding similarity to the element topic
     - source_report: join distinct sources with " + "
     - all other fields: taken from the highest-maturity entry
     """
@@ -609,6 +610,32 @@ def _merge_group(group: list[MaterialElement]) -> MaterialElement:
             if sig not in seen_sig:
                 seen_sig.add(sig)
                 merged_sig.append(sig)
+
+    # Trim oversized keyword/signal lists by embedding similarity to the topic.
+    needs_trim = len(merged_kw) > _KEYWORD_LIMIT or len(merged_sig) > _KEYWORD_LIMIT
+    if needs_trim:
+        topic = f"{primary.name} {primary.name_en} {primary.typical_use}"
+        emb_model = _build_embedding_model()
+
+        if len(merged_kw) > _KEYWORD_LIMIT:
+            orig_kw_count = len(merged_kw)
+            merged_kw = _trim_by_similarity(merged_kw, topic, emb_model)
+            logger.info(
+                "Trimmed visual_keywords for '%s': %d → %d",
+                primary.name,
+                orig_kw_count,
+                len(merged_kw),
+            )
+
+        if len(merged_sig) > _KEYWORD_LIMIT:
+            orig_sig_count = len(merged_sig)
+            merged_sig = _trim_by_similarity(merged_sig, topic, emb_model)
+            logger.info(
+                "Trimmed signals for '%s': %d → %d",
+                primary.name,
+                orig_sig_count,
+                len(merged_sig),
+            )
 
     sources = list(dict.fromkeys(e.source_report for e in group if e.source_report))
     merged_source = " + ".join(sources)
@@ -678,6 +705,56 @@ def _union_find_clusters(n: int, pairs: list[tuple[int, int]]) -> list[list[int]
     for idx in range(n):
         clusters[find(idx)].append(idx)
     return list(clusters.values())
+
+
+_KEYWORD_LIMIT = 20
+
+
+def _trim_by_similarity(
+    items: list[str],
+    topic: str,
+    model,
+    limit: int = _KEYWORD_LIMIT,
+) -> list[str]:
+    """Return the top-`limit` items ranked by cosine similarity to `topic`.
+
+    Embeds `topic` and all `items` in a single batch call, ranks by cosine
+    similarity, and returns the top `limit` items.  Falls back to the first
+    `limit` items by insertion order if the embedding call fails.
+
+    Args:
+        items: Candidate strings to rank and trim.
+        topic: Reference string representing the element's theme.
+        model: An embeddings model with an ``embed_documents`` method.
+        limit: Maximum number of items to retain.
+
+    Returns:
+        At most `limit` items, ordered by descending similarity to `topic`.
+    """
+    import numpy as np
+
+    if len(items) <= limit:
+        return items
+
+    try:
+        all_texts = [topic] + items
+        vectors = np.array(model.embed_documents(all_texts), dtype=float)
+        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1.0, norms)
+        unit_vecs = vectors / norms
+        topic_vec = unit_vecs[0]
+        item_vecs = unit_vecs[1:]
+        scores = item_vecs @ topic_vec
+        top_indices = sorted(range(len(items)), key=lambda i: scores[i], reverse=True)[:limit]
+        # Preserve relative insertion order among selected items
+        top_indices_ordered = sorted(top_indices)
+        return [items[i] for i in top_indices_ordered]
+    except Exception:
+        logger.warning(
+            "Embedding call failed during keyword trimming; keeping first %d items by insertion order.",
+            limit,
+        )
+        return items[:limit]
 
 
 def _build_embedding_model():

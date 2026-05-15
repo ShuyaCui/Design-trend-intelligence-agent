@@ -595,8 +595,8 @@ def download_images(
 # ===== GEMINI IMAGE DESCRIPTION =====
 
 _IMAGE_DESCRIPTION_PROMPT = (
-    "Describe this image concisely in 1-3 sentences. "
-    "If the image shows a juice product, include its color, texture, opacity, "
+    "Describe this image concisely in 1-3 sentences in Chinese. "
+    "If the image shows a product with liquid, include its color, texture, opacity, "
     "and any decorations such as fruit garnish, ice, glass style, or packaging. "
     "Focus on visually distinctive properties."
 )
