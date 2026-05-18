@@ -3,15 +3,24 @@
 ## Requirements
 
 ### Requirement: Semantic deduplication after exact-name deduplication
-The system SHALL perform a second deduplication pass using text embeddings after the exact-name deduplication step. Within each dimension, any two elements whose `name` fields have a cosine similarity score greater than 0.7 SHALL be merged into a single element.
+The system SHALL perform a second deduplication pass using text embeddings after the exact-name deduplication step. Within each dimension, any two elements whose **composite similarity strings** have a cosine similarity score greater than 0.7 SHALL be merged into a single element.
 
-#### Scenario: Two elements with semantically equivalent names are merged
-- **WHEN** two `MaterialElement` objects share the same `dimension` and their `name` fields yield a cosine similarity > 0.7 via text-embedding-3-small
+The **composite similarity string** for an element is constructed as:
+`name + " " + " ".join(visual_keywords[:10])`
+
+If `visual_keywords` is empty, the composite string falls back to `name` alone.
+
+#### Scenario: Two elements with semantically equivalent composite strings are merged
+- **WHEN** two `MaterialElement` objects share the same `dimension` and their composite similarity strings (name + up to 10 visual_keywords) yield a cosine similarity > 0.7 via text-embedding-3-small
 - **THEN** the two elements SHALL be merged into one using the same merge rules as exact-name deduplication (highest maturity wins, list fields unioned, source_report concatenated)
 
-#### Scenario: Two elements with dissimilar names are not merged
-- **WHEN** two `MaterialElement` objects share the same `dimension` but their `name` cosine similarity ≤ 0.7
+#### Scenario: Two elements with dissimilar composite strings are not merged
+- **WHEN** two `MaterialElement` objects share the same `dimension` but their composite similarity string cosine similarity ≤ 0.7
 - **THEN** both elements SHALL remain as separate entries in the output
+
+#### Scenario: Element with empty visual_keywords uses name only
+- **WHEN** a `MaterialElement` has an empty `visual_keywords` list
+- **THEN** its composite similarity string SHALL be its `name` field alone, and similarity SHALL be computed against that string
 
 #### Scenario: Elements in different dimensions are never merged by semantic dedup
 - **WHEN** two `MaterialElement` objects have different `dimension` values, regardless of name similarity
