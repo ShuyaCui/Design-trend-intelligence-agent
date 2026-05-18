@@ -809,7 +809,10 @@ def _semantic_deduplicate_elements(
             result.extend(dim_elems)
             continue
 
-        names = [e.name for e in dim_elems]
+        names = [
+            f"{e.name} {' '.join(e.visual_keywords[:10])}".strip() if e.visual_keywords else e.name
+            for e in dim_elems
+        ]
         vectors = np.array(embedding_model.embed_documents(names), dtype=float)
 
         # Normalise rows for fast cosine similarity via dot product
