@@ -46,6 +46,7 @@ from material_schema import (  # noqa: E402
     ThreeDimExtraction,
     make_element_id,
 )
+from pydantic import BaseModel, Field  # noqa: E402
 
 from deep_research_from_scratch.Helper import GenAIToken  # noqa: E402
 
@@ -54,29 +55,44 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Report → category mapping
+# Report → category inference
 # ---------------------------------------------------------------------------
 
-_CATEGORY_MAP: dict[str, str] = {
-    "饮料": "饮料",
-    "洗发水": "洗发水",
-    "精华": "面部精华",
-}
+class _CategoryExtraction(BaseModel):
+    product_category: str = Field(
+        description="产品品类，简短名称，2-6个字，如'面部护理'、'洗发水'、'饮料'、'彩妆'"
+    )
 
 
-def _infer_category(report_path: Path) -> str:
-    """Infer product category from report path or content."""
-    for keyword, category in _CATEGORY_MAP.items():
-        if keyword in report_path.name:
-            return category
-    # Filename is generic (e.g. report.md) — scan the first 500 chars of content
+def _infer_category(report_path: Path, model=None) -> str:
+    """Infer product category from report title/heading using LLM.
+
+    Reads the first 300 characters of the report (typically contains the title)
+    and asks the LLM to extract the product category. Falls back to '未知品类'
+    if the model is unavailable or extraction fails.
+    """
     try:
-        content = report_path.read_text(encoding="utf-8")[:500]
-        for keyword, category in _CATEGORY_MAP.items():
-            if keyword in content:
-                return category
+        header = report_path.read_text(encoding="utf-8")[:300]
     except OSError:
-        pass
+        return "未知品类"
+
+    if model is not None:
+        try:
+            cat_model = model.with_structured_output(_CategoryExtraction)
+            prompt = (
+                "从以下报告标题/开头中提取产品品类名称（简短，2-6个字）。\n\n"
+                f"报告开头：\n{header}\n\n"
+                "只提取最核心的产品品类，例如：面部护理、洗发水、饮料、彩妆。"
+            )
+            result: _CategoryExtraction = cat_model.invoke(
+                [HumanMessage(content=prompt)]
+            )
+            if result.product_category:
+                logger.debug("Inferred category '%s' for %s", result.product_category, report_path.name)
+                return result.product_category
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Category inference failed for %s: %s", report_path.name, exc)
+
     return "未知品类"
 
 
@@ -323,7 +339,6 @@ def extract_single_report(
     splitting; if still fewer than 2 chunks, falls back to full-report extraction.
     """
     report_text = report_path.read_text(encoding="utf-8")
-    category = _infer_category(report_path)
     if report_id:
         source_label = report_id
     else:
@@ -335,6 +350,7 @@ def extract_single_report(
         )
 
     model = _build_model(model_id, temperature=0.0)
+    category = _infer_category(report_path, model=model)
     style_list = "\n".join(
         f"   - {name}: {desc}" for name, desc in STYLE_CATALOG.items()
     )
