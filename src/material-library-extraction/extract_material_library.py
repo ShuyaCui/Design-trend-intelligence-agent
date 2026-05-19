@@ -36,8 +36,6 @@ from material_schema import (  # noqa: E402
     DIMENSION_EN,
     DIMENSIONS,
     EXTRACTION_SCHEMA_VERSION,
-    MATURITY_LEVELS,
-    STYLE_CATALOG,
     DimensionFile,
     IndexMetadata,
     MaterialElement,
@@ -55,45 +53,52 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Report → category inference
+# Report metadata extraction (category + trend_time via LLM)
 # ---------------------------------------------------------------------------
 
-class _CategoryExtraction(BaseModel):
+class _ReportMetadata(BaseModel):
     product_category: str = Field(
         description="产品品类，简短名称，2-6个字，如'面部护理'、'洗发水'、'饮料'、'彩妆'"
     )
+    trend_time: str = Field(
+        description="趋势时间范围，如'2025年11月—2026年5月'，若无则留空"
+    )
 
 
-def _infer_category(report_path: Path, model=None) -> str:
-    """Infer product category from report title/heading using LLM.
+def _extract_report_metadata(report_path: Path, model=None) -> tuple[str, str]:
+    """Extract product category and trend time from the report title via LLM.
 
-    Reads the first 300 characters of the report (typically contains the title)
-    and asks the LLM to extract the product category. Falls back to '未知品类'
-    if the model is unavailable or extraction fails.
+    Reads the first 300 characters of the report (typically the title) and
+    asks the LLM to extract both fields in one call. Returns
+    ``(product_category, trend_time)``; falls back to ``('未知品类', '')``
+    on failure or when no model is provided.
     """
     try:
         header = report_path.read_text(encoding="utf-8")[:300]
     except OSError:
-        return "未知品类"
+        return "未知品类", ""
 
     if model is not None:
         try:
-            cat_model = model.with_structured_output(_CategoryExtraction)
+            meta_model = model.with_structured_output(_ReportMetadata)
             prompt = (
-                "从以下报告标题/开头中提取产品品类名称（简短，2-6个字）。\n\n"
-                f"报告开头：\n{header}\n\n"
-                "只提取最核心的产品品类，例如：面部护理、洗发水、饮料、彩妆。"
+                "从以下报告标题/开头中提取两项信息：\n"
+                "1. 产品品类（简短，2-6个字，例如：面部护理、洗发水、饮料、彩妆）\n"
+                "2. 趋势时间范围（例如：2025年11月—2026年5月；若标题中没有则留空）\n\n"
+                f"报告开头：\n{header}"
             )
-            result: _CategoryExtraction = cat_model.invoke(
-                [HumanMessage(content=prompt)]
+            result: _ReportMetadata = meta_model.invoke([HumanMessage(content=prompt)])
+            logger.debug(
+                "Report metadata: category='%s' trend_time='%s' for %s",
+                result.product_category,
+                result.trend_time,
+                report_path.name,
             )
-            if result.product_category:
-                logger.debug("Inferred category '%s' for %s", result.product_category, report_path.name)
-                return result.product_category
+            return result.product_category, result.trend_time
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Category inference failed for %s: %s", report_path.name, exc)
+            logger.warning("Metadata extraction failed for %s: %s", report_path.name, exc)
 
-    return "未知品类"
+    return "未知品类", ""
 
 
 # ---------------------------------------------------------------------------
@@ -158,12 +163,6 @@ _THREE_DIM_EXTRACTION_PROMPT = """你是一个设计元素提取专家。你的�
 ## 通用提取规则
 
 - **粒度**: 每个独立的设计概念成为一张卡片。一个趋势段落可能包含1-3个独立元素。
-- **成熟度判定**:
-   - "已广泛出现""主流""当前最核心" → 主流
-   - "正在上升""新兴" → 上升
-   - "实验性""概念化""尚有限制" → 实验性
-- **aesthetic_style** 必须从以下预定义列表中选择最接近的一个:
-{styles}
 - **source_heading**: 必须填写该元素对应的报告中的原始章节标题文本。
 - **source_section**: 填写章节编号（如 "§4.1", "趋势3", "3.2"）。
 - **signals**: 该元素向消费者传达的信息，2-5项。
@@ -350,10 +349,7 @@ def extract_single_report(
         )
 
     model = _build_model(model_id, temperature=0.0)
-    category = _infer_category(report_path, model=model)
-    style_list = "\n".join(
-        f"   - {name}: {desc}" for name, desc in STYLE_CATALOG.items()
-    )
+    category, trend_time = _extract_report_metadata(report_path, model=model)
 
     all_elements: list[MaterialElement] = []
     chunks = _chunks_with_breadcrumbs(report_text)
@@ -371,9 +367,7 @@ def extract_single_report(
 
     for chunk_idx, (breadcrumb, chunk_body) in enumerate(chunks):
         context = f"[章节位置: {breadcrumb}]\n\n{chunk_body}" if breadcrumb else chunk_body
-        prompt1 = _THREE_DIM_EXTRACTION_PROMPT.format(
-            styles=style_list, content=context
-        )
+        prompt1 = _THREE_DIM_EXTRACTION_PROMPT.format(content=context)
         logger.info(
             "  Chunk %d/%d (%d chars, bc=%r)...",
             chunk_idx + 1,
@@ -395,6 +389,7 @@ def extract_single_report(
                 continue
             elem.source_report = source_label
             elem.product_category = category
+            elem.trend_time = trend_time
             elem.id = make_element_id(category, elem.dimension, elem.name, elem.source_section)
             all_elements.append(elem)
             chunk_count += 1
@@ -523,16 +518,15 @@ def _merge_group(group: list[MaterialElement]) -> MaterialElement:
     """Merge a group of MaterialElements into one canonical entry.
 
     Rules:
-    - maturity: keep the highest (主流 > 上升 > 实验性)
     - visual_keywords / signals: union, deduped, order-preserving, then trimmed
       to at most _KEYWORD_LIMIT items by embedding similarity to the element topic
+    - trend_time: union of distinct values joined with " / "
     - source_report: join distinct sources with " + "
-    - all other fields: taken from the highest-maturity entry
+    - all other fields: taken from the first entry in the group
     """
     if len(group) == 1:
         return group[0]
 
-    group = sorted(group, key=lambda e: _MATURITY_RANK.get(e.maturity, 99))
     primary = group[0]
 
     seen_kw: set[str] = set()
@@ -580,11 +574,15 @@ def _merge_group(group: list[MaterialElement]) -> MaterialElement:
     sources = list(dict.fromkeys(e.source_report for e in group if e.source_report))
     merged_source = " + ".join(sources)
 
+    trend_times = list(dict.fromkeys(e.trend_time for e in group if e.trend_time))
+    merged_trend_time = " / ".join(trend_times)
+
     return primary.model_copy(
         update={
             "visual_keywords": merged_kw,
             "signals": merged_sig,
             "source_report": merged_source,
+            "trend_time": merged_trend_time,
         }
     )
 
@@ -602,11 +600,10 @@ def _deduplicate_elements(elements: list[MaterialElement]) -> list[MaterialEleme
         result = _merge_group(group)
         if len(group) > 1:
             logger.info(
-                "Merged %d '%s' (%s) entries → maturity=%s, sources=[%s]",
+                "Merged %d '%s' (%s) entries → sources=[%s]",
                 len(group),
                 name,
                 dim,
-                result.maturity,
                 result.source_report,
             )
         merged.append(result)
@@ -777,12 +774,11 @@ def _semantic_deduplicate_elements(
             if len(group) > 1:
                 merged_names = [e.name for e in group]
                 logger.info(
-                    "Semantic-merged %d (%s) entries %s → '%s' maturity=%s",
+                    "Semantic-merged %d (%s) entries %s → '%s'",
                     len(group),
                     dim,
                     merged_names,
                     merged.name,
-                    merged.maturity,
                 )
             result.append(merged)
 
@@ -794,7 +790,7 @@ def build_dimension_files(
     output_dir: Path,
     semantic_dedup: bool = True,
 ) -> dict[str, int]:
-    """Split all elements by dimension, deduplicate, group by maturity, write JSON files.
+    """Split all elements by dimension, deduplicate, write JSON files.
 
     Performs two deduplication passes:
     1. Exact-name deduplication (always).
@@ -826,11 +822,8 @@ def build_dimension_files(
             dimension=dim,
             dimension_en=DIMENSION_EN[dim],
             last_updated=datetime.now().isoformat(timespec="seconds"),
+            elements=dim_elements,
         )
-
-        for mat in MATURITY_LEVELS:
-            group = [e for e in dim_elements if e.maturity == mat]
-            setattr(dim_file, mat, group)
 
         out_path = output_dir / f"{DIMENSION_EN[dim]}.json"
         out_path.write_text(

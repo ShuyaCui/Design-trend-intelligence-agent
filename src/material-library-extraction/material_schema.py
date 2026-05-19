@@ -19,8 +19,6 @@ from pydantic import BaseModel, Field
 DIMENSIONS = ("颜色", "装饰物", "透明度与质地")
 DIMENSION_EN = {"颜色": "color", "装饰物": "decoration", "透明度与质地": "texture"}
 
-MATURITY_LEVELS = ("主流", "上升", "实验性")
-
 # Map Chinese dimension labels found in reports to canonical enum values.
 DIMENSION_ALIASES: dict[str, str] = {
     "颜色": "颜色",
@@ -79,16 +77,16 @@ class MaterialElement(BaseModel):
     dimension: Literal["颜色", "装饰物", "透明度与质地"]
     name: str = Field(description="Element name in Chinese")
     name_en: str = Field(description="Element name in English")
+    trend_time: str = Field(
+        default="",
+        description="Trend time range extracted from report title, e.g. '2025年11月—2026年5月'",
+    )
     visual_keywords: list[str] = Field(
         description="Scannable visual descriptors (3-8 items)",
     )
-    aesthetic_style: Literal[
-        "科技净澈", "天然奢养", "奢华克制", "感官甜品", "自然清体", "可视科技"
-    ] = Field(description="Closest aesthetic style from the predefined set")
     signals: list[str] = Field(
         description="What this element communicates to consumers (2-5 items)",
     )
-    maturity: Literal["主流", "上升", "实验性"]
     typical_use: str = Field(description="Typical product/usage context")
     source_section: str = Field(description="Report section heading reference")
     source_heading: str = Field(
@@ -132,7 +130,7 @@ class ThreeDimExtraction(BaseModel):
 # stale cache entries are automatically invalidated on next run.
 # ---------------------------------------------------------------------------
 
-EXTRACTION_SCHEMA_VERSION = 4
+EXTRACTION_SCHEMA_VERSION = 5
 
 
 # ---------------------------------------------------------------------------
@@ -163,9 +161,7 @@ class DimensionFile(BaseModel):
     dimension: str
     dimension_en: str
     last_updated: str
-    主流: list[MaterialElement] = Field(default_factory=list)
-    上升: list[MaterialElement] = Field(default_factory=list)
-    实验性: list[MaterialElement] = Field(default_factory=list)
+    elements: list[MaterialElement] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -193,16 +189,3 @@ class IndexMetadata(BaseModel):
     texture_count: int = 0
     processed_reports: list[ProcessedReport] = Field(default_factory=list)
 
-
-# ---------------------------------------------------------------------------
-# Predefined style catalog (for prompt context only)
-# ---------------------------------------------------------------------------
-
-STYLE_CATALOG: dict[str, str] = {
-    "科技净澈": "以无色透明、高折光、极简精密为核心的科技感审美。传达高纯度、实验室级精炼、配方自信。",
-    "天然奢养": "以琥珀金、蜂蜜色、温润油感为核心的天然滋养审美。传达珍稀植物、发酵活性、贵价天然原料。",
-    "奢华克制": "以香槟微金、细腻珠光、极致均匀为核心的低调奢华审美。传达精密工艺、稀缺成分、少即是贵。",
-    "感官甜品": "以奶白、焦糖、绵密厚乳为核心的甜品化审美。传达温暖、醇厚、甜蜜、可食用联想。",
-    "自然清体": "以植物绿、纤维感、天然浑浊为核心的健康自然审美。传达真实、低加工、膳食纤维、功能性。",
-    "可视科技": "以透明基底中可见结构（微囊、颗粒、分相）为核心的前沿审美。传达功效可视化、靶向输送、科技门槛。",
-}
