@@ -142,6 +142,19 @@ uv run python src/material-library-extraction/extract_material_library.py \
   --model azure_openai:GPT-55-2026-04-24
 ```
 
+### 手动修改库文件后更新 index.json
+
+当手工编辑 `color.json` / `decoration.json` / `texture.json`（如删除若干元素）后，
+运行以下命令重新计算各维度元素数量并写回 `index.json`：
+
+```bash
+# 同步 index.json 的元素统计（不调用 LLM，不修改库文件本身）
+uv run python src/material-library-extraction/update_index.py
+
+# 指定自定义输出目录
+uv run python src/material-library-extraction/update_index.py --output-dir material_library/
+```
+
 ### 何时使用哪种命令
 
 | 场景 | 命令 |
@@ -151,6 +164,7 @@ uv run python src/material-library-extraction/extract_material_library.py \
 | 只修改了元数据字段（如新增 `trend_time`） | `--migrate-cache` |
 | 只调整了合并/去重逻辑 | `--rebuild-only` |
 | 调试时想跳过耗时的 embedding 去重 | `--no-semantic-dedup` |
+| 手动删改库文件后同步 index.json | `update_index.py` |
 
 ---
 
