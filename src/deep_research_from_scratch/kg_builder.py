@@ -150,6 +150,7 @@ IMPORTANT rules:
 - IGNORE outer packaging, bottle shape, labels, box design
 - Return ONLY material IDs from the provided list — do not invent new IDs
 - It is OK to return an empty list if nothing matches
+- It is OK to return multiple IDs if multiple materials are visually present in the contents
 """
 
 def _image_to_inline_part(path: str) -> dict:
@@ -322,15 +323,12 @@ def run_vlm_match(
 
 
 def compute_consensus(runs: list[list[str]]) -> list[str]:
-    """Return material IDs that appear in ALL three VLM runs."""
-    if not runs or any(len(r) == 0 and len(runs[0]) > 0 for r in runs):
-        # If any run errored (empty) but others had results, be conservative
-        pass
+    """Return material IDs that appear in at least 2 out of 3 VLM runs."""
     if len(runs) < 3:
         return []
-    sets = [set(r) for r in runs]
-    consensus = sets[0].intersection(*sets[1:])
-    return list(consensus)
+    from collections import Counter
+    counts = Counter(mid for run in runs for mid in set(run))
+    return [mid for mid, cnt in counts.items() if cnt >= 2]
 
 
 def upsert_edges(
