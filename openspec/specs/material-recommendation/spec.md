@@ -51,7 +51,7 @@ Each `ElementRecommendation` SHALL include traceability to the original trend re
 - **THEN** the `source_reports` list SHALL contain all unique report paths, deduplicated
 
 ### Requirement: Multi-turn interactive refinement
-The recommender agent SHALL support multi-turn conversations where users refine recommendations based on previous results. The agent SHALL retain full conversation history via LangGraph's `MessagesState` and adjust subsequent recommendations accordingly.
+The recommender agent SHALL support multi-turn conversations where users refine recommendations based on previous results. The agent SHALL retain full conversation history via LangGraph's `MessagesState`, rerun the full `recommend → attach_images` pipeline on each follow-up turn, and adjust subsequent recommendations accordingly.
 
 #### Scenario: User requests replacement recommendations
 - **WHEN** a user says "换一批" after receiving initial recommendations
@@ -68,6 +68,24 @@ The recommender agent SHALL support multi-turn conversations where users refine 
 #### Scenario: Conversation history is preserved
 - **WHEN** the user sends a third message in a conversation thread
 - **THEN** the LLM SHALL have access to all previous user messages and assistant responses to maintain context
+
+#### Scenario: Follow-up turn refreshes reference images
+- **WHEN** 用户在已有推荐结果上追加约束（如"换一批"、"更清新的"）
+- **THEN** graph SHALL 重新执行 `recommend → attach_images`，新一轮推荐结果的每个元素 SHALL 附带重新检索的参考图片
+
+### Requirement: Recommender graph topology
+推荐 agent 的 StateGraph SHALL 包含两个节点：`recommend` 和 `attach_images`，执行顺序为 `START → recommend → attach_images → END`.
+
+#### Scenario: Full pipeline execution
+- **WHEN** 用户发送设计 query
+- **THEN** graph SHALL 依次执行 `recommend`（LLM 推荐）和 `attach_images`（图片检索），最终返回包含参考图片的推荐结果
+
+### Requirement: Recommendation display format
+推荐结果格式化为对话消息时，SHALL 在每个元素的推荐理由之后显示参考图片信息，并逐行使用 `📷 描述 (路径)` 格式展示。
+
+#### Scenario: Element with images
+- **WHEN** 某个推荐元素有 1-3 张参考图片
+- **THEN** 显示格式 SHALL 在推荐理由和来源信息之后，逐行列出每张图片为 `📷 描述 (路径)`
 
 ### Requirement: LangGraph agent registration
 The recommender agent SHALL be registered as a separate graph entry in `langgraph.json` with the key `material_recommender`.
