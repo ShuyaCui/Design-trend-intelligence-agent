@@ -360,7 +360,71 @@ def get_processed_image_paths(driver: Driver) -> set[str]:
         return {record["path"] for record in result}
 
 
-# ── Full pipeline ─────────────────────────────────────────────────────────────
+# ── Material sync ─────────────────────────────────────────────────────────────
+
+def sync_materials(
+    driver: Driver,
+    materials: dict[str, list[dict]],
+) -> dict[str, list[str]]:
+    """Sync Neo4j Material nodes against the current JSON files.
+
+    - Materials present in JSON but missing from Neo4j → upserted.
+    - Materials present in Neo4j but missing from JSON → deleted (DETACH DELETE
+      removes all edges to Image nodes automatically).
+
+    Returns:
+        {"added": [...ids], "removed": [...ids]}
+    """
+    all_current = {m["id"]: m for dim_mats in materials.values() for m in dim_mats}
+
+    with driver.session() as session:
+        result = session.run("MATCH (m:Material) RETURN m.id AS id")
+        existing_ids = {record["id"] for record in result}
+
+    added_ids = set(all_current) - existing_ids
+    removed_ids = existing_ids - set(all_current)
+
+    if removed_ids:
+        with driver.session() as session:
+            session.run(
+                "MATCH (m:Material) WHERE m.id IN $ids DETACH DELETE m",
+                ids=list(removed_ids),
+            )
+        logger.info("Removed %d Material nodes: %s", len(removed_ids), removed_ids)
+
+    if added_ids:
+        added_by_dim: dict[str, list[dict]] = {k: [] for k in materials}
+        for dim_key, dim_mats in materials.items():
+            added_by_dim[dim_key] = [m for m in dim_mats if m["id"] in added_ids]
+        upsert_material_nodes(driver, added_by_dim)
+        logger.info("Added %d Material nodes: %s", len(added_ids), added_ids)
+
+    return {"added": list(added_ids), "removed": list(removed_ids)}
+
+
+def reset_orphaned_images(driver: Driver) -> list[str]:
+    """Delete Image nodes that have no outgoing edges.
+
+    These images lost all their material connections (e.g. because their matched
+    materials were removed). Deleting them allows build_kg() to reprocess them
+    against the current material set on the next run.
+
+    Returns:
+        List of image paths that were reset.
+    """
+    with driver.session() as session:
+        result = session.run(
+            "MATCH (i:Image) WHERE NOT (i)-[]->() "
+            "WITH collect(i.path) AS paths, collect(i) AS nodes "
+            "FOREACH (n IN nodes | DETACH DELETE n) "
+            "RETURN paths"
+        )
+        record = result.single()
+        paths = record["paths"] if record else []
+    if paths:
+        logger.info("Reset %d orphaned Image nodes for reprocessing.", len(paths))
+    return paths
+
 
 def build_kg(
     driver: Driver,
