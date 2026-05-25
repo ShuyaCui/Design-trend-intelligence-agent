@@ -295,7 +295,7 @@ def _format_recommendations_as_text(result: RecommendationResult) -> str:
                 f"   {rec.reasoning}{source_info}"
             )
             for img in rec.reference_images:
-                lines.append(f"   📷 {img.description} ({img.local_path})")
+                lines.append(f"   📷 {img.local_path}")
         lines.append("")
     return "\n".join(lines)
 
