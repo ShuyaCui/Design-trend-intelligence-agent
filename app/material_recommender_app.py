@@ -16,33 +16,54 @@ from deep_research_from_scratch.state_recommender import (
     RecommendationResult,
 )
 
-
-def _build_gallery(recs: list[ElementRecommendation]) -> list[tuple[str, str]]:
-    """Build (image_path, caption) tuples for a gr.Gallery, skipping missing files."""
-    items = []
-    for elem in recs:
-        for img in elem.reference_images:
-            p = Path(img.local_path)
-            if p.exists():
-                caption = f"{elem.element_name}: {elem.reasoning}"
-                items.append((str(p), caption))
-    return items
+_PROJECT_ROOT = Path(__file__).parent.parent
 
 
-def _concept_md(result: RecommendationResult) -> str:
-    """Format concept analysis and material card text as markdown."""
-    lines = [f"### 概念分析\n{result.concept_analysis}\n"]
-    for label, recs in [
-        ("颜色", result.colors),
-        ("透明度与质地", result.textures),
-        ("装饰物", result.decorations),
-    ]:
-        lines.append(f"### {label}")
-        for i, rec in enumerate(recs, 1):
-            source = f" *(来源: {rec.source_heading})*" if rec.source_heading else ""
-            lines.append(f"{i}. **{rec.element_name}** ({rec.element_name_en})  \n   {rec.reasoning}{source}")
-        lines.append("")
-    return "\n".join(lines)
+def _elem_html(elem: ElementRecommendation) -> str:
+    """Render one element as an HTML card: images on the left, text on the right."""
+    imgs_html = ""
+    for img in elem.reference_images:
+        p = Path(img.local_path)
+        if p.exists():
+            imgs_html += (
+                f'<img src="/file={p}" '
+                f'style="width:110px;height:110px;object-fit:cover;'
+                f'border-radius:6px;margin:2px;flex-shrink:0;">'
+            )
+
+    source = f'<br><span style="color:#888;font-size:0.8em;">来源: {elem.source_heading}</span>' if elem.source_heading else ""
+    return (
+        f'<div style="display:flex;gap:12px;align-items:flex-start;'
+        f'padding:10px;margin-bottom:10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;">'
+        f'<div style="display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;max-width:240px;">{imgs_html}</div>'
+        f'<div style="min-width:0;">'
+        f'<b>{elem.element_name}</b> <span style="color:#666;">({elem.element_name_en})</span><br>'
+        f'<span style="font-size:0.9em;color:#444;">{elem.reasoning}</span>'
+        f'{source}'
+        f'</div></div>'
+    )
+
+
+def _build_html(label: str, recs: list[ElementRecommendation]) -> str:
+    """Build full HTML section for one dimension."""
+    if not recs:
+        return ""
+    cards = "".join(_elem_html(r) for r in recs)
+    return f'<h4 style="margin:12px 0 6px;">{label}</h4>{cards}'
+
+
+def _results_html(result: RecommendationResult) -> str:
+    """Render full results panel as HTML."""
+    analysis = (
+        f'<div style="background:#f0f9ff;padding:10px;border-radius:8px;margin-bottom:12px;">'
+        f'<b>概念分析</b><br>{result.concept_analysis}</div>'
+    )
+    body = (
+        _build_html("颜色", result.colors)
+        + _build_html("透明度与质地", result.textures)
+        + _build_html("装饰物", result.decorations)
+    )
+    return analysis + body
 
 
 def chat_fn(message, history, thread_id):
@@ -60,21 +81,13 @@ def chat_fn(message, history, thread_id):
     ]
 
     recs: RecommendationResult | None = result.get("recommendations")
-    if recs:
-        concept = _concept_md(recs)
-        colors = _build_gallery(recs.colors)
-        textures = _build_gallery(recs.textures)
-        decorations = _build_gallery(recs.decorations)
-    else:
-        concept = ""
-        colors = textures = decorations = []
-
-    return history, concept, colors, textures, decorations
+    html = _results_html(recs) if recs else "<i>无推荐结果</i>"
+    return history, html
 
 
 def new_chat_fn():
     """Reset all UI state and start a new session."""
-    return [], "", [], [], [], str(uuid.uuid4())
+    return [], "<i>等待推荐结果…</i>", str(uuid.uuid4())
 
 
 with gr.Blocks(title="材料推荐助手") as demo:
@@ -95,17 +108,11 @@ with gr.Blocks(title="材料推荐助手") as demo:
                 send_btn = gr.Button("发送", variant="primary", scale=1)
             new_chat_btn = gr.Button("🔄 新对话", variant="secondary")
 
-        # Right: results panel
+        # Right: results panel — each element shows text + images together
         with gr.Column(scale=1):
-            concept_md = gr.Markdown("*等待推荐结果…*")
-            with gr.Accordion("颜色参考图", open=True):
-                gallery_colors = gr.Gallery(label="颜色", columns=3, height=220)
-            with gr.Accordion("质地参考图", open=True):
-                gallery_textures = gr.Gallery(label="透明度与质地", columns=3, height=220)
-            with gr.Accordion("装饰物参考图", open=True):
-                gallery_decorations = gr.Gallery(label="装饰物", columns=3, height=220)
+            results_html = gr.HTML("<i>等待推荐结果…</i>")
 
-    outputs = [chatbot, concept_md, gallery_colors, gallery_textures, gallery_decorations]
+    outputs = [chatbot, results_html]
 
     send_btn.click(
         fn=chat_fn,
@@ -127,4 +134,4 @@ with gr.Blocks(title="材料推荐助手") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(allowed_paths=[str(_PROJECT_ROOT)])
