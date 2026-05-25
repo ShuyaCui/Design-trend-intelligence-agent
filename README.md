@@ -94,6 +94,67 @@ uv run jupyter notebook
 source .venv/bin/activate && jupyter notebook
 ```
 
+### LangGraph Studio
+
+LangGraph Studio lets you interactively run and inspect any agent graph registered in `langgraph.json` — including the **material recommender** (notebook 7) — without writing code.
+
+#### Start the local dev server
+
+Run from the **repo root** (not from inside `notebooks/`):
+
+```bash
+UV_LINK_MODE=copy uvx --refresh --from "langgraph-cli[inmem]" --with-editable . \
+  --python 3.11 langgraph dev
+```
+
+The server starts at `http://127.0.0.1:2024`. You should see:
+
+```
+Ready!
+- API: http://127.0.0.1:2024
+- Docs: http://127.0.0.1:2024/docs
+- LangGraph Studio: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024
+```
+
+> **Note:** `UV_LINK_MODE=copy` is required on shared filesystems where hardlinking across mount points is not permitted.
+
+#### Open the Studio UI
+
+1. Sign in at [smith.langchain.com](https://smith.langchain.com) (free LangSmith account required).
+2. Open: **https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024**
+3. Select a graph from the dropdown — all entries in `langgraph.json` appear here.
+
+#### Available graphs
+
+| Graph name | Notebook | What it does |
+|---|---|---|
+| `scope_research` | 1 | Clarifies user intent; produces a research brief |
+| `research_agent` | 2 | Iterative web research with Tavily |
+| `research_agent_mcp` | 3 | Research agent using MCP tool servers |
+| `research_agent_supervisor` | 4 | Supervisor coordinating parallel sub-agents |
+| `research_agent_full` | 5 | End-to-end: scope → research → report |
+| `material_recommender` | 7 | Recommends design elements (colors / textures / decorations) from the material library |
+
+#### Trying the material recommender (notebook 7)
+
+1. Select **`material_recommender`** in the graph dropdown.
+2. Send a design concept query, for example:
+   ```
+   设计一款以酸奶为设计概念的沐浴露，推荐颜色/质地/装饰物各3个候选
+   ```
+3. The agent runs two nodes — `recommend` → `attach_images` — and returns:
+   - **概念分析** — concept analysis
+   - **候选颜色 / 质地 / 装饰物** — recommended elements with reasoning, source report traceability, and reference images
+4. Follow up in the same thread for multi-turn refinement (e.g., ask for alternatives or a different style).
+
+#### Optional: override the model
+
+In the Studio config panel (⚙️), set:
+
+```json
+{ "recommender_model": "azure_openai:GPT-55-2026-04-24" }
+```
+
 ## 🏗️ Architecture
 
 The system follows a three-phase pipeline:
