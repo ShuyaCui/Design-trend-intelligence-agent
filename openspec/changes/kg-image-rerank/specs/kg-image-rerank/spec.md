@@ -32,12 +32,23 @@ The system SHALL return the top reranked images by similarity score, with a defa
 - **WHEN** the reranked candidate set contains more matches than the configured `top_k`
 - **THEN** the system SHALL return only the highest-scoring `top_k` images, defaulting to 3
 
-### Requirement: Zero-result handling from the KG
-The system SHALL return an empty image list when graph recall returns no images for a material, and SHALL NOT fall back to embedding-only retrieval over the full index.
+### Requirement: Configurable retrieval mode
+The system SHALL support an `image_retrieval_mode` configuration parameter read from LangGraph's `configurable` field. Valid values are `"kg_rerank"` (default) and `"embedding_only"`.
 
-#### Scenario: No graph-linked images are found
+#### Scenario: Default mode
+- **WHEN** `image_retrieval_mode` is not explicitly set
+- **THEN** the system SHALL use `"kg_rerank"` as the retrieval strategy
+
+#### Scenario: Embedding-only mode selected
+- **WHEN** `image_retrieval_mode` is set to `"embedding_only"`
+- **THEN** the system SHALL use the existing full-index embedding search over all 275 images, preserving current behavior
+
+### Requirement: Zero-result handling from the KG
+The system SHALL return an empty image list when graph recall returns no images for a material in `"kg_rerank"` mode, and SHALL NOT fall back to full-index embedding retrieval.
+
+#### Scenario: No graph-linked images are found (kg_rerank mode)
 - **WHEN** `get_images_for_material()` returns zero image paths for a material
-- **THEN** the system SHALL return an empty list for that element's reference images and SHALL NOT perform a full-index embedding search
+- **THEN** the system SHALL return an empty list for that element's reference images
 
 ### Requirement: ImageReference output format
 The system SHALL keep the current output contract by returning matched images as `ImageReference` objects containing `local_path` and `description`.

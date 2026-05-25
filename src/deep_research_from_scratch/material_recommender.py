@@ -20,7 +20,9 @@ from langchain_core.runnables import RunnableConfig
 from langchain_openai import AzureOpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 
+from deep_research_from_scratch import kg_retrieval
 from deep_research_from_scratch.Helper import GenAIToken
+from deep_research_from_scratch.kg_builder import get_neo4j_driver
 from deep_research_from_scratch.prompts import recommender_system_prompt
 from deep_research_from_scratch.state_recommender import (
     ElementRecommendation,
@@ -184,6 +186,51 @@ def _search_images(
     return results
 
 
+def _search_images_graph_rerank(
+    element_id: str,
+    query: str,
+    embeddings: np.ndarray,
+    metadata: list[dict],
+    emb_model: AzureOpenAIEmbeddings,
+    driver,
+    top_k: int = _TOP_K_IMAGES,
+) -> list[ImageReference]:
+    """KG recall + embedding rerank: retrieve top-k images for an element.
+
+    1. Query Neo4j for all images linked to element_id.
+    2. Filter cached embedding matrix to those paths.
+    3. Rerank filtered candidates by cosine similarity to query embedding.
+    4. Return top-k ImageReference objects.
+
+    Returns empty list if the KG has no linked images for this element.
+    """
+    kg_images = kg_retrieval.get_images_for_material(driver, material_id=element_id)
+    if not kg_images:
+        return []
+
+    kg_paths = {img["path"] for img in kg_images}
+    # Find indices in cached metadata whose local_path matches KG results
+    indices = [i for i, m in enumerate(metadata) if m["local_path"] in kg_paths]
+    if not indices:
+        return []
+
+    filtered_embeddings = embeddings[indices]
+    filtered_metadata = [metadata[i] for i in indices]
+
+    # Rerank by cosine similarity
+    q_vec = np.array(emb_model.embed_query(query), dtype=float)
+    norms = np.linalg.norm(filtered_embeddings, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1.0, norms)
+    normed = filtered_embeddings / norms
+    q_norm = q_vec / (np.linalg.norm(q_vec) or 1.0)
+    scores = normed @ q_norm
+    top_indices = np.argsort(scores)[::-1][:top_k]
+    return [
+        ImageReference(local_path=filtered_metadata[i]["local_path"], description=filtered_metadata[i]["description"])
+        for i in top_indices
+    ]
+
+
 def load_material_library(library_dir: Path | None = None) -> str:
     """Load and format all material library elements for LLM context injection.
 
@@ -332,35 +379,54 @@ def recommend(state: RecommenderState, config: RunnableConfig) -> dict:
     }
 
 
-def attach_images(state: RecommenderState) -> dict:
-    """Attach reference images to each recommended element via embedding retrieval.
+def attach_images(state: RecommenderState, config: RunnableConfig) -> dict:
+    """Attach reference images to each recommended element.
 
-    Loads (or builds) the image embedding index, then for each ElementRecommendation
-    in the current recommendations, computes a query from the element's name and
-    visual keywords and retrieves the top-k most similar images.
+    Retrieval mode is controlled by config["configurable"]["image_retrieval_mode"]:
+    - "kg_rerank" (default): KG graph recall then embedding reranking over candidates.
+    - "embedding_only": full-index embedding search (original behaviour).
+
+    In "kg_rerank" mode, elements with no KG-linked images return an empty image list
+    (no silent fallback to full-index search).
     """
     result: RecommendationResult | None = state.get("recommendations")
     if result is None:
         return {}
 
+    configurable = config.get("configurable", {})
+    retrieval_mode = configurable.get("image_retrieval_mode", "kg_rerank")
+
     element_index = _build_element_index()
     embeddings, metadata = _build_image_index()
     emb_model = _build_embedding_model()
+
+    driver = None
+    if retrieval_mode == "kg_rerank":
+        driver = get_neo4j_driver()
 
     def attach_to_list(recs: list[ElementRecommendation]) -> list[ElementRecommendation]:
         updated = []
         for rec in recs:
             query = _build_element_query(rec, element_index)
-            images = _search_images(query, embeddings, metadata, emb_model)
+            if retrieval_mode == "kg_rerank" and driver is not None:
+                images = _search_images_graph_rerank(
+                    rec.element_id, query, embeddings, metadata, emb_model, driver
+                )
+            else:
+                images = _search_images(query, embeddings, metadata, emb_model)
             updated.append(rec.model_copy(update={"reference_images": images}))
         return updated
 
-    enriched_result = RecommendationResult(
-        concept_analysis=result.concept_analysis,
-        colors=attach_to_list(result.colors),
-        textures=attach_to_list(result.textures),
-        decorations=attach_to_list(result.decorations),
-    )
+    try:
+        enriched_result = RecommendationResult(
+            concept_analysis=result.concept_analysis,
+            colors=attach_to_list(result.colors),
+            textures=attach_to_list(result.textures),
+            decorations=attach_to_list(result.decorations),
+        )
+    finally:
+        if driver is not None:
+            driver.close()
 
     recommendations_text = _format_recommendations_as_text(enriched_result)
     return {
