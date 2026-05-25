@@ -1,5 +1,6 @@
 """Gradio chat UI for the material recommender agent."""
 
+import base64
 import os
 import uuid
 from pathlib import Path
@@ -16,22 +17,37 @@ from deep_research_from_scratch.state_recommender import (
     RecommendationResult,
 )
 
-_PROJECT_ROOT = Path(__file__).parent.parent
+_MIME = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+}
+
+
+def _img_tag(path: Path) -> str:
+    """Return an <img> tag with the image base64-encoded as a data URI."""
+    mime = _MIME.get(path.suffix.lower(), "image/jpeg")
+    data = base64.b64encode(path.read_bytes()).decode()
+    return (
+        f'<img src="data:{mime};base64,{data}" '
+        f'style="width:110px;height:110px;object-fit:cover;border-radius:6px;margin:2px;flex-shrink:0;">'
+    )
 
 
 def _elem_html(elem: ElementRecommendation) -> str:
     """Render one element as an HTML card: images on the left, text on the right."""
-    imgs_html = ""
-    for img in elem.reference_images:
-        p = Path(img.local_path)
-        if p.exists():
-            imgs_html += (
-                f'<img src="/file={p}" '
-                f'style="width:110px;height:110px;object-fit:cover;'
-                f'border-radius:6px;margin:2px;flex-shrink:0;">'
-            )
-
-    source = f'<br><span style="color:#888;font-size:0.8em;">来源: {elem.source_heading}</span>' if elem.source_heading else ""
+    imgs_html = "".join(
+        _img_tag(p)
+        for img in elem.reference_images
+        if (p := Path(img.local_path)).exists()
+    )
+    source = (
+        f'<br><span style="color:#888;font-size:0.8em;">来源: {elem.source_heading}</span>'
+        if elem.source_heading
+        else ""
+    )
     return (
         f'<div style="display:flex;gap:12px;align-items:flex-start;'
         f'padding:10px;margin-bottom:10px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;">'
@@ -108,7 +124,7 @@ with gr.Blocks(title="材料推荐助手") as demo:
                 send_btn = gr.Button("发送", variant="primary", scale=1)
             new_chat_btn = gr.Button("🔄 新对话", variant="secondary")
 
-        # Right: results panel — each element shows text + images together
+        # Right: results panel — each element card has images + text side-by-side
         with gr.Column(scale=1):
             results_html = gr.HTML("<i>等待推荐结果…</i>")
 
@@ -134,4 +150,4 @@ with gr.Blocks(title="材料推荐助手") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch(allowed_paths=[str(_PROJECT_ROOT)])
+    demo.launch()
