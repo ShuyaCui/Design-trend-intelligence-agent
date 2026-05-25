@@ -10,12 +10,17 @@ os.environ.setdefault("GRADIO_TEMP_DIR", str(Path.home() / ".gradio_tmp"))
 
 import gradio as gr
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
 
-from deep_research_from_scratch.material_recommender import recommender_agent
+from deep_research_from_scratch.material_recommender import _build_graph
 from deep_research_from_scratch.state_recommender import (
     ElementRecommendation,
     RecommendationResult,
 )
+
+# Compile with MemorySaver so thread_id persists conversation history across turns.
+_checkpointer = MemorySaver()
+_agent = _build_graph().compile(checkpointer=_checkpointer)
 
 _MIME = {
     ".jpg": "image/jpeg",
@@ -85,7 +90,7 @@ def _results_html(result: RecommendationResult) -> str:
 def chat_fn(message, history, thread_id):
     """Handle a user chat message and return updated UI state."""
     config = {"configurable": {"thread_id": thread_id}}
-    result = recommender_agent.invoke(
+    result = _agent.invoke(
         {"messages": [HumanMessage(content=message)]},
         config=config,
     )
