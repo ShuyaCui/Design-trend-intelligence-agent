@@ -7,7 +7,9 @@ based on user product design queries. It supports multi-turn conversations
 and provides source traceability for all recommendations via post-hoc lookup.
 """
 
+import base64
 import json
+import mimetypes
 import os
 import urllib.parse  # noqa: F401 — pre-load before urllib3 can shadow it
 from pathlib import Path
@@ -276,6 +278,22 @@ def _enrich_with_sources(
     )
 
 
+def _image_to_data_uri(local_path: str) -> str | None:
+    """Read a local image file and return a base64 data URI for inline rendering."""
+    try:
+        path = Path(local_path)
+        if not path.exists():
+            return None
+        mime_type, _ = mimetypes.guess_type(str(path))
+        if not mime_type or not mime_type.startswith("image/"):
+            mime_type = "image/jpeg"
+        with open(path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("ascii")
+        return f"data:{mime_type};base64,{encoded}"
+    except OSError:
+        return None
+
+
 def _format_recommendations_as_text(result: RecommendationResult) -> str:
     """Format a RecommendationResult as readable markdown for conversation history."""
     lines = [f"**概念分析**: {result.concept_analysis}\n"]
@@ -295,7 +313,11 @@ def _format_recommendations_as_text(result: RecommendationResult) -> str:
                 f"   {rec.reasoning}{source_info}"
             )
             for img in rec.reference_images:
-                lines.append(f"   📷 {img.description} ({img.local_path})")
+                data_uri = _image_to_data_uri(img.local_path)
+                if data_uri:
+                    lines.append(f"   ![{img.description}]({data_uri})")
+                else:
+                    lines.append(f"   📷 {img.description} ({img.local_path})")
         lines.append("")
     return "\n".join(lines)
 
