@@ -50,7 +50,10 @@ def chat_fn(message, history, thread_id):
     )
 
     agent_text = result["messages"][-1].content
-    history = history + [(message, agent_text)]
+    history = history + [
+        {"role": "user", "content": message},
+        {"role": "assistant", "content": agent_text},
+    ]
 
     recs: RecommendationResult | None = result.get("recommendations")
     if recs:
@@ -78,7 +81,7 @@ with gr.Blocks(title="材料推荐助手") as demo:
     with gr.Row():
         # Left: chat
         with gr.Column(scale=1):
-            chatbot = gr.Chatbot(label="对话", height=600, type="tuples")
+            chatbot = gr.Chatbot(label="对话", height=600)
             with gr.Row():
                 msg_box = gr.Textbox(
                     placeholder="输入设计概念，例如：设计一款以酸奶为概念的沐浴露…",
