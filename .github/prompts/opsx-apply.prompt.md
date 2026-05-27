@@ -100,7 +100,7 @@ openspec instructions apply --change "<name>" --json
 ## Phase A 完成
 
 **改动文件：**
-- src/deep_research_from_scratch/foo.py：新增 X（通过 notebooks/N.ipynb 生成）
+- src/trend_agent/foo.py：新增 X（通过 notebooks/N.ipynb 生成）
 - notebooks/N.ipynb：新增 %%writefile 单元
 
 **改动摘要：**

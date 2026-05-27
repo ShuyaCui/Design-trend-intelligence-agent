@@ -1,4 +1,4 @@
-# 🧱 Deep Research From Scratch
+# 🧱 Trend Agent
 
 Deep research is one of the most popular agent applications today. [OpenAI](https://openai.com/index/introducing-deep-research/), [Anthropic](https://www.anthropic.com/engineering/built-multi-agent-research-system), [Perplexity](https://www.perplexity.ai/hub/blog/introducing-perplexity-deep-research), and [Google](https://gemini.google/overview/deep-research/?hl=en) all ship deep research products that produce comprehensive reports from diverse sources. This repo builds a deep researcher **from scratch** — step by step through 8 tutorial notebooks — culminating in a domain-specific design-trend intelligence system powered by a multimodal knowledge graph.
 
@@ -39,8 +39,8 @@ Deep research is one of the most popular agent applications today. [OpenAI](http
 ### Installation
 
 ```bash
-git clone https://github.com/ShuyaCui/deep_research_from_scratch
-cd deep_research_from_scratch
+git clone https://github.com/ShuyaCui/trend_agent
+cd trend_agent
 uv sync
 ```
 
@@ -83,7 +83,7 @@ LANGFUSE_PUBLIC_KEY=pk-lf-...
 LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_BASE_URL=http://localhost:3000
 LANGSMITH_API_KEY=<your-langsmith-key>
-LANGSMITH_PROJECT=deep_research_from_scratch
+LANGSMITH_PROJECT=trend_agent
 ```
 
 ### Running Notebooks
@@ -225,7 +225,7 @@ User Query
 ## 📝 Repository Layout
 
 ```
-deep_research_from_scratch/
+trend_agent/
 ├── notebooks/                    # ✏️  Edit here — source of truth
 │   ├── 1_scoping.ipynb
 │   ├── 2_research_agent.ipynb
@@ -236,7 +236,7 @@ deep_research_from_scratch/
 │   ├── 7_material_recommender.ipynb
 │   ├── 8_multimodal_kg.ipynb
 │   └── utils.py
-├── src/deep_research_from_scratch/  # ⚙️  Auto-generated — do not edit
+├── src/trend_agent/  # ⚙️  Auto-generated — do not edit
 │   ├── research_agent_scope.py
 │   ├── research_agent.py
 │   ├── research_agent_mcp.py

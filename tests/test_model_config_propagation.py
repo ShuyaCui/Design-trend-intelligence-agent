@@ -3,12 +3,12 @@ from unittest.mock import MagicMock, patch
 
 from requests.exceptions import SSLError
 
-from deep_research_from_scratch import multi_agent_supervisor
-from deep_research_from_scratch import research_agent
-from deep_research_from_scratch import research_agent_full
-from deep_research_from_scratch import research_agent_mcp
-from deep_research_from_scratch import research_agent_scope
-from deep_research_from_scratch import utils as research_utils
+from trend_agent import multi_agent_supervisor
+from trend_agent import research_agent
+from trend_agent import research_agent_full
+from trend_agent import research_agent_mcp
+from trend_agent import research_agent_scope
+from trend_agent import utils as research_utils
 
 
 class SummarizationRuntimeConfigTests(unittest.TestCase):

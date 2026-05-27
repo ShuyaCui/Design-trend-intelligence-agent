@@ -10,8 +10,8 @@ os.environ.setdefault("GRADIO_TEMP_DIR", str(Path.home() / ".gradio_tmp"))
 import gradio as gr
 from langchain_core.messages import HumanMessage
 
-from deep_research_from_scratch.material_recommender import _build_graph
-from deep_research_from_scratch.state_recommender import (
+from trend_agent.material_recommender import _build_graph
+from trend_agent.state_recommender import (
     ElementRecommendation,
     RecommendationResult,
 )

@@ -43,9 +43,9 @@ The multimodal KG contains rich cross-dimensional relationships: each product im
 
 ## Impact
 
-- `src/deep_research_from_scratch/kg_retrieval.py`: New query function(s) for co-occurrence
-- `src/deep_research_from_scratch/material_recommender.py`: New `enrich_cooccurrence` node or integration into existing flow
-- `src/deep_research_from_scratch/state_recommender.py`: `ElementRecommendation` Pydantic model gains `frequently_paired_with` field
+- `src/trend_agent/kg_retrieval.py`: New query function(s) for co-occurrence
+- `src/trend_agent/material_recommender.py`: New `enrich_cooccurrence` node or integration into existing flow
+- `src/trend_agent/state_recommender.py`: `ElementRecommendation` Pydantic model gains `frequently_paired_with` field
 - `notebooks/7_material_recommender.ipynb`: Source of truth for recommender changes
 - `notebooks/8_multimodal_kg.ipynb`: Demo cells for standalone analytics
 - No new dependencies required

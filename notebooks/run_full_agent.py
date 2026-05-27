@@ -30,7 +30,7 @@ load_dotenv()
 # Remove LangSmith vars so traces go only to Langfuse
 disable_langsmith()
 
-from deep_research_from_scratch.research_agent_full import agent  # noqa: E402
+from trend_agent.research_agent_full import agent  # noqa: E402
 
 
 async def run(query: str, thread_id: str | None = None) -> str:

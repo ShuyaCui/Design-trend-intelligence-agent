@@ -82,7 +82,7 @@ Files changed:
 
 ## Critical Workflow Rule
 
-**Notebooks are the source of truth.** Files in `src/deep_research_from_scratch/` are auto-generated from notebooks via Jupyter `%%writefile` magic commands. Never edit `src/` files directly — all changes must go in the corresponding notebook cell in `notebooks/`. Run the notebook cell to regenerate the source file after editing.
+**Notebooks are the source of truth.** Files in `src/trend_agent/` are auto-generated from notebooks via Jupyter `%%writefile` magic commands. Never edit `src/` files directly — all changes must go in the corresponding notebook cell in `notebooks/`. Run the notebook cell to regenerate the source file after editing.
 
 ## Build & Lint
 
@@ -100,7 +100,7 @@ ruff check src/
 ruff check src/ --fix
 
 # Lint a single file
-ruff check src/deep_research_from_scratch/research_agent.py
+ruff check src/trend_agent/research_agent.py
 ```
 
 Ruff is configured in `pyproject.toml` with Google-style docstrings (`D` rules), isort (`I`), pyflakes (`F`), and pycodestyle (`E`). Fix lint issues in the notebook `%%writefile` cells, not in `src/` directly.
@@ -131,6 +131,6 @@ The system implements a three-phase deep research pipeline using LangGraph:
 
 - **Tools as Pydantic models**: The supervisor uses `@tool`-decorated Pydantic `BaseModel` classes (`ConductResearch`, `ResearchComplete`) as structured tool definitions rather than function-based tools.
 
-- **Prompts**: All prompt templates live in `src/deep_research_from_scratch/prompts.py` (generated from notebooks). They use `.format()` string interpolation with variables like `{date}`, `{messages}`, `{research_brief}`.
+- **Prompts**: All prompt templates live in `src/trend_agent/prompts.py` (generated from notebooks). They use `.format()` string interpolation with variables like `{date}`, `{messages}`, `{research_brief}`.
 
 - **Environment variables**: Required: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION`, `HEADERS_PROJECT_NAME`, `HEADERS_USERID`, `TAVILY_API_KEY`. Optional: `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`.

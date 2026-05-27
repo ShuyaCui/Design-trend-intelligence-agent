@@ -201,7 +201,7 @@ def init_judge_model(
         A chat model instance ready for ``.invoke()`` or ``.with_structured_output()``.
     """
     from langchain.chat_models import init_chat_model as _init_chat_model
-    from deep_research_from_scratch.Helper import GenAIToken
+    from trend_agent.Helper import GenAIToken
 
     deployment = model.split(":")[-1]
 

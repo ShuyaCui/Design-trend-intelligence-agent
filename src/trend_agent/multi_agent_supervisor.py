@@ -1,0 +1,324 @@
+
+"""Multi-agent supervisor for coordinating research across multiple specialized agents.
+
+This module implements a supervisor pattern where:
+1. A supervisor agent coordinates research activities and delegates tasks
+2. Multiple researcher agents work on specific sub-topics independently
+3. Results are aggregated and compressed for final reporting
+
+The supervisor uses parallel research execution to improve efficiency while
+maintaining isolated context windows for each research topic.
+"""
+
+import asyncio
+import os
+
+from dotenv import load_dotenv
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import (
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+    filter_messages,
+)
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
+from typing_extensions import Literal
+
+from trend_agent.Helper import GenAIToken
+from trend_agent.prompts import lead_researcher_prompt
+from trend_agent.research_agent import researcher_agent
+from trend_agent.state_multi_agent_supervisor import (
+    ConductResearch,
+    ResearchComplete,
+    SupervisorState,
+)
+from trend_agent.state_research import ImageResult
+from trend_agent.trend_dimensions import (
+    format_dimensions_for_prompt,
+    load_trend_dimensions,
+)
+from trend_agent.utils import (
+    get_today_str,
+    normalize_model_id,
+    think_tool,
+)
+
+load_dotenv()
+
+
+def get_notes_from_tool_calls(messages: list[BaseMessage]) -> list[str]:
+    """Extract research notes from ToolMessage objects in supervisor message history.
+
+    This function retrieves the compressed research findings that sub-agents
+    return as ToolMessage content. When the supervisor delegates research to
+    sub-agents via ConductResearch tool calls, each sub-agent returns its
+    compressed findings as the content of a ToolMessage. This function
+    extracts all such ToolMessage content to compile the final research notes.
+
+    Args:
+        messages: List of messages from supervisor's conversation history
+
+    Returns:
+        List of research note strings extracted from ToolMessage objects
+    """
+    return [tool_msg.content for tool_msg in filter_messages(messages, include_types="tool")]
+
+
+# Ensure async compatibility for Jupyter environments
+try:
+    import nest_asyncio
+    try:
+        from IPython import get_ipython
+        if get_ipython() is not None:
+            nest_asyncio.apply()
+    except ImportError:
+        pass
+except ImportError:
+    pass
+
+
+# ===== CONFIGURATION =====
+
+_DEFAULT_SUPERVISOR_MODEL = "azure_openai:gpt-5.3"
+
+# Tool list for the supervisor (distinct name avoids collision with the node function below)
+SUPERVISOR_TOOLSET = [ConductResearch, ResearchComplete, think_tool]
+
+# Maximum number of tool call iterations for individual researcher agents
+max_researcher_iterations = 6
+
+# Maximum number of concurrent research agents the supervisor can launch
+max_concurrent_researchers = 3
+
+
+def _build_model(model_id: str, **kwargs):
+    """Build an Azure OpenAI model instance from a model identifier string.
+
+    Extracts the deployment name from the model identifier using the
+    convention that model name equals deployment name (e.g.,
+    "azure_openai:gpt-5.3" -> deployment "GPT-5.3").
+    """
+    normalized_model_id = normalize_model_id(model_id)
+    deployment = normalized_model_id.split(":")[-1]
+    return init_chat_model(
+        model=normalized_model_id,
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment=deployment,
+        api_key=GenAIToken().token(),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+        default_headers={
+            "project-name": os.getenv("HEADERS_PROJECT_NAME"),
+            "userid": os.getenv("HEADERS_USERID"),
+        },
+        **kwargs,
+    )
+
+
+# ===== SUPERVISOR NODES =====
+
+def _build_supervisor_dimensions_section() -> str:
+    """Build the expert dimensions section for the supervisor prompt.
+
+    Returns a full XML section string when dimensions are available,
+    or an empty string for graceful degradation (no empty XML block).
+    """
+    dims = format_dimensions_for_prompt(load_trend_dimensions())
+    if not dims:
+        return ""
+    return (
+        "<Expert Dimensions>\n"
+        "When decomposing the research question into parallel sub-tasks, consider "
+        "structuring ConductResearch calls around these expert analytical dimensions:\n"
+        f"{dims}\n"
+        "Adapt them to the research question — not all dimensions apply to every topic. "
+        "Do not create more sub-tasks than your concurrency limit allows.\n"
+        "</Expert Dimensions>\n"
+    )
+
+
+async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[Literal["supervisor_tools"]]:
+    """Coordinate research activities.
+
+    Analyzes the research brief and current progress to decide:
+    - What research topics need investigation
+    - Whether to conduct parallel research
+    - When research is complete
+
+    Model is controlled by config["configurable"]["supervisor_model"]
+    (default: "azure_openai:gpt-5.3").
+
+    Args:
+        state: Current supervisor state with messages and research progress
+        config: LangGraph runtime config; supports configurable["supervisor_model"]
+
+    Returns:
+        Command to proceed to supervisor_tools node with updated state
+    """
+    configurable = config.get("configurable", {})
+    supervisor_model = _build_model(
+        configurable.get("supervisor_model", _DEFAULT_SUPERVISOR_MODEL),
+        temperature=1.0,
+    )
+    supervisor_model_with_tools = supervisor_model.bind_tools(SUPERVISOR_TOOLSET)
+
+    supervisor_messages = state.get("supervisor_messages", [])
+
+    trend_dims = _build_supervisor_dimensions_section()
+    system_message = lead_researcher_prompt.format(
+        date=get_today_str(),
+        max_concurrent_research_units=max_concurrent_researchers,
+        max_researcher_iterations=max_researcher_iterations,
+        trend_dimensions=trend_dims
+    )
+    messages = [SystemMessage(content=system_message)] + supervisor_messages
+
+    response = await supervisor_model_with_tools.ainvoke(messages)
+
+    return Command(
+        goto="supervisor_tools",
+        update={
+            "supervisor_messages": [response],
+            "research_iterations": state.get("research_iterations", 0) + 1
+        }
+    )
+
+
+async def supervisor_tools(state: SupervisorState, config: RunnableConfig) -> Command[Literal["supervisor", "__end__"]]:
+    """Execute supervisor decisions - either conduct research or end the process.
+
+    Handles:
+    - Executing think_tool calls for strategic reflection
+    - Launching parallel research agents for different topics
+    - Aggregating research results
+    - Determining when research is complete
+
+    Propagates the runtime config to each researcher sub-agent so that
+    configurable model overrides (e.g. research_model, compress_model) apply
+    throughout the full pipeline.
+
+    Args:
+        state: Current supervisor state with messages and iteration count
+        config: LangGraph runtime config forwarded to researcher sub-agents
+
+    Returns:
+        Command to continue supervision, end process, or handle errors
+    """
+    supervisor_messages = state.get("supervisor_messages", [])
+    research_iterations = state.get("research_iterations", 0)
+    most_recent_message = supervisor_messages[-1]
+
+    tool_messages = []
+    all_raw_notes = []
+    all_images: list[ImageResult] = []
+    next_step = "supervisor"
+    should_end = False
+
+    exceeded_iterations = research_iterations >= max_researcher_iterations
+    no_tool_calls = not most_recent_message.tool_calls
+    research_complete = any(
+        tool_call["name"] == "ResearchComplete"
+        for tool_call in most_recent_message.tool_calls
+    )
+
+    if exceeded_iterations or no_tool_calls or research_complete:
+        should_end = True
+        next_step = END
+
+    else:
+        try:
+            think_tool_calls = [
+                tool_call for tool_call in most_recent_message.tool_calls
+                if tool_call["name"] == "think_tool"
+            ]
+
+            conduct_research_calls = [
+                tool_call for tool_call in most_recent_message.tool_calls
+                if tool_call["name"] == "ConductResearch"
+            ]
+
+            for tool_call in think_tool_calls:
+                observation = think_tool.invoke(tool_call["args"])
+                tool_messages.append(
+                    ToolMessage(
+                        content=observation,
+                        name=tool_call["name"],
+                        tool_call_id=tool_call["id"]
+                    )
+                )
+
+            if conduct_research_calls:
+                # Pass config explicitly so researcher sub-agents inherit configurable overrides
+                coros = [
+                    researcher_agent.ainvoke(
+                        {
+                            "researcher_messages": [
+                                HumanMessage(content=tool_call["args"]["research_topic"])
+                            ],
+                            "research_topic": tool_call["args"]["research_topic"]
+                        },
+                        config=config,
+                    )
+                    for tool_call in conduct_research_calls
+                ]
+
+                tool_results = await asyncio.gather(*coros)
+
+                research_tool_messages = [
+                    ToolMessage(
+                        content=result.get("compressed_research", "Error synthesizing research report"),
+                        name=tool_call["name"],
+                        tool_call_id=tool_call["id"]
+                    ) for result, tool_call in zip(tool_results, conduct_research_calls)
+                ]
+
+                tool_messages.extend(research_tool_messages)
+
+                all_raw_notes = [
+                    "\n".join(result.get("raw_notes", []))
+                    for result in tool_results
+                ]
+
+                # Aggregate images from sub-agents with URL dedup
+                seen_urls = {
+                    img.url for img in state.get("images", [])
+                }
+                for result in tool_results:
+                    for img in result.get("images", []):
+                        if img.url not in seen_urls:
+                            seen_urls.add(img.url)
+                            all_images.append(img)
+
+        except Exception as e:
+            print(f"Error in supervisor tools: {e}")  # noqa: T201
+            should_end = True
+            next_step = END
+
+    if should_end:
+        return Command(
+            goto=next_step,
+            update={
+                "notes": get_notes_from_tool_calls(supervisor_messages),
+                "research_brief": state.get("research_brief", "")
+            }
+        )
+    else:
+        return Command(
+            goto=next_step,
+            update={
+                "supervisor_messages": tool_messages,
+                "raw_notes": all_raw_notes,
+                "images": all_images,
+            }
+        )
+
+
+# ===== GRAPH CONSTRUCTION =====
+
+supervisor_builder = StateGraph(SupervisorState)
+supervisor_builder.add_node("supervisor", supervisor)
+supervisor_builder.add_node("supervisor_tools", supervisor_tools)
+supervisor_builder.add_edge(START, "supervisor")
+supervisor_agent = supervisor_builder.compile()
