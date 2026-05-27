@@ -196,6 +196,49 @@ In the Studio config panel (⚙️), set:
 { "recommender_model": "azure_openai:GPT-55-2026-04-24" }
 ```
 
+### Gradio Chat App (Material Recommender)
+
+A standalone chat UI for the material recommender — no LangGraph Studio required.
+
+#### 1. Start Neo4j
+
+The material recommender queries a Neo4j knowledge graph for reference images. Start the container before launching the app:
+
+```bash
+# First time — create the container (see Notebook 8 for full KG build steps)
+docker run -d \
+  --name neo4j-multimodal-kg \
+  -p 7474:7474 -p 7687:7687 \
+  -e NEO4J_AUTH=neo4j/<your-password> \
+  neo4j:5
+
+# Subsequent runs — just start the existing container
+docker start neo4j-multimodal-kg
+```
+
+Verify it's up:
+
+```bash
+docker ps --filter name=neo4j-multimodal-kg
+# Should show status "Up …" with ports 7474 and 7687 mapped
+```
+
+#### 2. Launch the Gradio app
+
+```bash
+uv run python app/material_recommender_app.py
+```
+
+The app starts at **http://localhost:7860** (or the URL printed in the terminal). Open it in your browser and send a design query, for example:
+
+```
+设计一款以酸奶为设计概念的沐浴露，推荐颜色/质地/装饰物各3个候选
+```
+
+> **Tip:** If you've already activated the virtualenv (`source .venv/bin/activate`), you can use `python app/material_recommender_app.py` directly.
+
+---
+
 ## 🏗️ Architecture
 
 The system follows a three-phase pipeline:
