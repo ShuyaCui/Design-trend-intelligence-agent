@@ -4,7 +4,7 @@ from unittest.mock import patch
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
 
-from deep_research_from_scratch.multi_agent_supervisor import supervisor_tools
+from trend_agent.multi_agent_supervisor import supervisor_tools
 
 
 class _StubThinkTool:
@@ -32,7 +32,7 @@ class SupervisorToolsTests(unittest.IsolatedAsyncioTestCase):
         }
 
         with patch(
-            "deep_research_from_scratch.multi_agent_supervisor.think_tool",
+            "trend_agent.multi_agent_supervisor.think_tool",
             new=_StubThinkTool(),
         ):
             result = await supervisor_tools(state, config={"configurable": {}})

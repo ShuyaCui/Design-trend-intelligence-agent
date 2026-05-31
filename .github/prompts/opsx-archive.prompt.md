@@ -76,7 +76,7 @@ ruff check src/
 uv run pytest tests/ -v
 
 # 检查 import（基本 smoke test）
-uv run python -c "import deep_research_from_scratch"
+uv run python -c "import trend_agent"
 ```
 
 如果测试失败，显示失败信息并询问用户是否继续归档。

@@ -1,7 +1,7 @@
 import unittest
 
-from deep_research_from_scratch import research_agent_full
-from deep_research_from_scratch.state_scope import AgentState
+from trend_agent import research_agent_full
+from trend_agent.state_scope import AgentState
 
 
 class FullAgentStateSchemaTests(unittest.TestCase):

@@ -2,7 +2,7 @@
 __pycache__
 .ipynb_checkpoints
 .langgraph_api/
-deep_research_from_scratch.egg-info/
+trend_agent.egg-info/
 *.pyc
 # Ignore the generated trend dimensions file since it's a derived artifact that can be regenerated from the source documents and LLM extraction pipeline
 trend_knowledge/

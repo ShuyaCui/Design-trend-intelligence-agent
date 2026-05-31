@@ -46,7 +46,7 @@ from material_schema import (  # noqa: E402
 )
 from pydantic import BaseModel, Field  # noqa: E402
 
-from deep_research_from_scratch.Helper import GenAIToken  # noqa: E402
+from trend_agent.Helper import GenAIToken  # noqa: E402
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

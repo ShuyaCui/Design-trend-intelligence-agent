@@ -3,8 +3,8 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from deep_research_from_scratch.Helper import GenAIToken
-from deep_research_from_scratch import utils as research_utils
+from trend_agent.Helper import GenAIToken
+from trend_agent import utils as research_utils
 
 
 class GenAITokenTests(unittest.TestCase):
