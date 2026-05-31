@@ -1,6 +1,6 @@
-# 🧱 Trend collection agent
+# 🧱 Design trend intelligence agent
 
-This repo builds a deep researcher step by step through 8 tutorial notebooks based on "deep research from scratch" from LangChain — culminating in a domain-specific design-trend intelligence system powered by a multimodal knowledge graph.
+This repo builds a deep researcher based on "deep research from scratch" from LangChain — culminating in a domain-specific design-trend intelligence system powered by a multimodal knowledge graph.
 
 ![overview](https://github.com/user-attachments/assets/b71727bd-0094-40c4-af5e-87cdb02123b4)
 
